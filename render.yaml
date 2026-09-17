@@ -1,0 +1,59 @@
+services:
+  # ==========================================
+  # 1. DUESLY NEXT.JS WEB SERVICE
+  # ==========================================
+  - type: web
+    name: suedue
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: DEFAULT_ADMIN_EMAIL
+        sync: false
+      - key: DEFAULT_ADMIN_PASSWORD
+        sync: false
+      - key: NEXT_PUBLIC_UPI_ID
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: OPENWA_URL
+        sync: false
+      - key: OPENWA_API_KEY
+        sync: false
+      - key: OPENWA_SESSION_ID
+        sync: false
+      - key: PYTHON_VERIFIER_URL
+        sync: false
+      - key: FAMPAY_GMAIL
+        sync: false
+      - key: FAMPAY_GMAIL_APP_PASSWORD
+        sync: false
+
+  # ==========================================
+  # 2. PYTHON FAMPAY IMAP IDLE VERIFIER SERVICE
+  # ==========================================
+  - type: web
+    name: suedue-verifier
+    runtime: python
+    rootDir: python-verifier
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: FAMPAY_GMAIL
+        sync: false
+      - key: FAMPAY_GMAIL_APP_PASSWORD
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false

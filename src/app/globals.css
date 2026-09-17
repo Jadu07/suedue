@@ -1,0 +1,230 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-primary: #1b1938;
+  --color-primary-deep: #0e0c1f;
+  --color-surface-violet-soft: #c9b4fa;
+  --color-surface-teal-deep: #0e3030;
+  --color-surface-teal-mid: #155555;
+
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #fafaf8;
+  --color-hairline: #e8e4dd;
+  --color-hairline-dark: #3f3a52;
+
+  --color-ink: #292827;
+  --color-ink-mute: #73706d;
+  --color-ink-faint: #9a9794;
+  --color-on-primary: #ffffff;
+
+  --color-background: var(--color-canvas);
+  --color-foreground: var(--color-ink);
+
+  --font-sans: "Inter Variable", sans-serif;
+  --font-display: "Inter Variable", sans-serif;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  --spacing-huge: 64px;
+
+  /* Prevent spacing overrides from breaking max-w-* container sizes */
+  --width-xs: 20rem;
+  --width-sm: 24rem;
+  --width-md: 28rem;
+  --width-lg: 32rem;
+  --width-xl: 36rem;
+  --width-2xl: 42rem;
+  --width-3xl: 48rem;
+  --width-4xl: 56rem;
+  --width-5xl: 64rem;
+  --width-6xl: 72rem;
+  --width-7xl: 80rem;
+
+  --container-xs: 20rem;
+  --container-sm: 24rem;
+  --container-md: 28rem;
+  --container-lg: 32rem;
+  --container-xl: 36rem;
+  --container-2xl: 42rem;
+  --container-3xl: 48rem;
+  --container-4xl: 56rem;
+  --container-5xl: 64rem;
+  --container-6xl: 72rem;
+  --container-7xl: 80rem;
+
+  --max-width-xs: 20rem;
+  --max-width-sm: 24rem;
+  --max-width-md: 28rem;
+  --max-width-lg: 32rem;
+  --max-width-xl: 36rem;
+  --max-width-2xl: 42rem;
+  --max-width-3xl: 48rem;
+  --max-width-4xl: 56rem;
+  --max-width-5xl: 64rem;
+  --max-width-6xl: 72rem;
+  --max-width-7xl: 80rem;
+}
+
+@layer base {
+  :root {
+    --background: oklch(1 0 0); /* white */
+    --foreground: oklch(0.24 0.02 60); /* warm grey */
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.24 0.02 60);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.24 0.02 60);
+    --primary: oklch(0.2 0.05 280); /* indigo navy */
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.96 0.01 90); /* canvas soft */
+    --secondary-foreground: oklch(0.24 0.02 60);
+    --muted: oklch(0.96 0.01 90);
+    --muted-foreground: oklch(0.5 0.01 60);
+    --accent: oklch(0.96 0.01 90);
+    --accent-foreground: oklch(0.24 0.02 60);
+    --destructive: oklch(0.6 0.2 25);
+    --destructive-foreground: oklch(1 0 0);
+    --border: oklch(0.92 0.01 80); /* hairline */
+    --input: oklch(0.92 0.01 80);
+    --ring: oklch(0.2 0.05 280);
+    --radius: 8px;
+  }
+  
+  body {
+    @apply bg-canvas text-ink font-sans;
+    font-weight: 460;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+}
+
+/* Typography styles based on DESIGN.md */
+.display-xxl {
+  font-size: 64px;
+  font-weight: 540;
+  line-height: 0.96;
+  letter-spacing: 0;
+}
+
+.display-xl {
+  font-size: 48px;
+  font-weight: 460;
+  line-height: 0.96;
+  letter-spacing: -1.32px;
+}
+
+.display-lg {
+  font-size: 28px;
+  font-weight: 540;
+  line-height: 1.14;
+  letter-spacing: -0.63px;
+}
+
+.display-md {
+  font-size: 22px;
+  font-weight: 460;
+  line-height: 1.1;
+  letter-spacing: -0.315px;
+}
+
+.heading-lg {
+  font-size: 20px;
+  font-weight: 460;
+  line-height: 1.2;
+  letter-spacing: -0.4px;
+}
+
+.body-lg {
+  font-size: 18px;
+  font-weight: 540;
+  line-height: 1.5;
+  letter-spacing: -0.135px;
+}
+
+.body-md {
+  font-size: 16px;
+  font-weight: 460;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.body-strong {
+  font-size: 18.72px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.button-md {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.0;
+  letter-spacing: 0;
+}
+
+.button-cap {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.0;
+  letter-spacing: 0;
+}
+
+.caption {
+  font-size: 14px;
+  font-weight: 460;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.micro {
+  font-size: 12px;
+  font-weight: 540;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+/* Base button styles */
+.btn-primary-dark {
+  @apply bg-primary text-on-primary px-xl py-md rounded-md hover:bg-primary-deep transition-colors;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.0;
+}
+
+.btn-on-dark-pill {
+  @apply bg-surface-violet-soft text-primary px-xl py-md rounded-full;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.0;
+}
+
+.btn-secondary-outline {
+  @apply bg-canvas text-ink border border-hairline-dark px-xl py-md rounded-md;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.0;
+}
+
+.btn-on-teal {
+  @apply bg-canvas text-surface-teal-deep px-xl py-md rounded-md;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.0;
+}
