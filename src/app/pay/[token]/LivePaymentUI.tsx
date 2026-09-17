@@ -279,8 +279,9 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   const cleanToken = (refCode || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
   const amountRupees = (amountPaise / 100).toFixed(2);
 
+  const directUpiLink = `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(activePayeeName)}&am=${amountRupees}&cu=INR${cleanToken ? `&tn=${encodeURIComponent(cleanToken)}` : ""}`;
   const upiQuery = `pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(activePayeeName)}&am=${amountRupees}&cu=INR${cleanToken ? `&tn=${encodeURIComponent(cleanToken)}&tr=${encodeURIComponent(cleanToken)}` : ""}&mode=02`;
-  const genericUpiUrl = `upi://pay?${upiQuery}`;
+  const genericUpiUrl = directUpiLink;
 
   const triggerAppLaunch = (app: UPIAppConfig) => {
     if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
@@ -289,9 +290,8 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
       setTimeout(() => setToastMessage(null), 2500);
     }
 
-    // PhonePe enforces a hardcoded anti-fraud rule disabling bank accounts on external browser intent links to personal VPAs (forces wallet-only)
     if (app.id === "phonepe") {
-      setModalView("phonepe_notice");
+      window.location.href = directUpiLink;
       return;
     }
 
@@ -614,15 +614,33 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                 {/* 4 Primary Top Apps with Real Official Logos */}
                 <div className="grid grid-cols-2 gap-2">
                   {POPULAR_UPI_APPS.slice(0, 4).map((app) => (
-                    <button
-                      key={app.id}
-                      type="button"
-                      onClick={() => triggerAppLaunch(app)}
-                      className="flex items-center gap-2.5 py-3 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 cursor-pointer text-left"
-                    >
-                      <AppOfficialFavicon app={app} />
-                      <span className="truncate">{app.name}</span>
-                    </button>
+                    app.id === "phonepe" ? (
+                      <a
+                        key={app.id}
+                        href={directUpiLink}
+                        onClick={() => {
+                          if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
+                            navigator.clipboard.writeText(cleanToken).catch(() => {});
+                            setToastMessage(`Note "${cleanToken}" copied!`);
+                            setTimeout(() => setToastMessage(null), 2500);
+                          }
+                        }}
+                        className="flex items-center gap-2.5 py-3 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 cursor-pointer text-left"
+                      >
+                        <AppOfficialFavicon app={app} />
+                        <span className="truncate">{app.name}</span>
+                      </a>
+                    ) : (
+                      <button
+                        key={app.id}
+                        type="button"
+                        onClick={() => triggerAppLaunch(app)}
+                        className="flex items-center gap-2.5 py-3 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 cursor-pointer text-left"
+                      >
+                        <AppOfficialFavicon app={app} />
+                        <span className="truncate">{app.name}</span>
+                      </button>
+                    )
                   ))}
                 </div>
 
@@ -705,15 +723,33 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                 {/* Filtered Apps Grid with Real Official Brand Favicons */}
                 <div className="grid grid-cols-2 gap-2 max-h-[46vh] overflow-y-auto pr-0.5">
                   {filteredApps.map((app) => (
-                    <button
-                      key={app.id}
-                      type="button"
-                      onClick={() => triggerAppLaunch(app)}
-                      className="flex items-center gap-2.5 py-2.5 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 text-left cursor-pointer"
-                    >
-                      <AppOfficialFavicon app={app} />
-                      <span className="truncate">{app.name}</span>
-                    </button>
+                    app.id === "phonepe" ? (
+                      <a
+                        key={app.id}
+                        href={directUpiLink}
+                        onClick={() => {
+                          if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
+                            navigator.clipboard.writeText(cleanToken).catch(() => {});
+                            setToastMessage(`Note "${cleanToken}" copied!`);
+                            setTimeout(() => setToastMessage(null), 2500);
+                          }
+                        }}
+                        className="flex items-center gap-2.5 py-2.5 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 text-left cursor-pointer"
+                      >
+                        <AppOfficialFavicon app={app} />
+                        <span className="truncate">{app.name}</span>
+                      </a>
+                    ) : (
+                      <button
+                        key={app.id}
+                        type="button"
+                        onClick={() => triggerAppLaunch(app)}
+                        className="flex items-center gap-2.5 py-2.5 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 text-left cursor-pointer"
+                      >
+                        <AppOfficialFavicon app={app} />
+                        <span className="truncate">{app.name}</span>
+                      </button>
+                    )
                   ))}
                 </div>
 
