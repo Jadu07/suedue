@@ -69,20 +69,12 @@ function AppOfficialFavicon({ app }: { app: UPIAppConfig }) {
 
   return (
     <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white shadow-2xs border border-hairline/60">
-      {!imgError ? (
-        <img
-          src={`/logos/${app.id}.png`}
-          alt={app.name}
-          onError={() => setImgError(true)}
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <img
-          src={`https://www.google.com/s2/favicons?domain=${app.domain}&sz=128`}
-          alt={app.name}
-          className="w-full h-full object-cover"
-        />
-      )}
+      <img
+        src={!imgError ? `/logos/${app.id}.png` : "/logos/bhim.png"}
+        alt={app.name}
+        onError={() => setImgError(true)}
+        className="w-full h-full object-cover"
+      />
     </div>
   );
 }
