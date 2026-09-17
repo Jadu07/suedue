@@ -103,7 +103,6 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   const [copiedNote, setCopiedNote] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isWhatsAppBrowser, setIsWhatsAppBrowser] = useState(false);
-  const [showDirectBankGuide, setShowDirectBankGuide] = useState(false);
 
   useEffect(() => {
     if (typeof navigator !== "undefined") {
@@ -276,7 +275,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
 
   // ===================== ACTIVE PAYMENT =====================
   const activeUpiId = upiId || process.env.NEXT_PUBLIC_UPI_ID || "yashrajchouhan@fam";
-  const activePayeeName = payeeName || process.env.NEXT_PUBLIC_PAYEE_NAME || "Yashraj Chouhan";
+  const activePayeeName = (payeeName && payeeName !== "Admin") ? payeeName : "Yashraj Chouhan";
   const cleanToken = (refCode || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
   const amountRupees = (amountPaise / 100).toFixed(2);
 
@@ -492,60 +491,6 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
           </div>
         )}
 
-        {/* Direct Bank Account / ₹2000 Limit Helper Card */}
-        <div className="bg-canvas border border-hairline rounded-xl p-3.5 mb-lg text-left shadow-2xs">
-          <button
-            type="button"
-            onClick={() => setShowDirectBankGuide(!showDirectBankGuide)}
-            className="w-full flex items-center justify-between text-xs font-bold text-ink cursor-pointer"
-          >
-            <span className="flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-primary" />
-              <span>Bank Account blocked or ₹2,000 limit?</span>
-            </span>
-            <span className="text-[11px] text-primary underline">
-              {showDirectBankGuide ? "Hide" : "Pay via Bank →"}
-            </span>
-          </button>
-
-          {showDirectBankGuide && (
-            <div className="mt-2.5 pt-2.5 border-t border-hairline text-xs text-ink-mute space-y-2 animate-in fade-in duration-150">
-              <p className="leading-relaxed">
-                UPI apps (like PhonePe) restrict web links to Wallets or cap them at ₹2,000.
-                To pay directly from your <strong>Bank Account with no limits or warnings</strong>:
-              </p>
-              <div className="bg-canvas-soft border border-hairline rounded-lg p-2.5 space-y-2">
-                <p className="font-semibold text-ink text-[11px]">1. Open PhonePe, GPay, or Paytm</p>
-                <p className="font-semibold text-ink text-[11px]">2. Tap &ldquo;To UPI ID&rdquo; & enter:</p>
-                <div className="flex items-center justify-between bg-canvas border border-hairline px-2.5 py-1.5 rounded text-ink font-mono font-bold text-xs">
-                  <span>{activeUpiId}</span>
-                  <button
-                    type="button"
-                    onClick={handleCopyUpi}
-                    className="ml-2 text-[10px] font-sans font-bold px-2 py-0.5 bg-canvas-soft border border-hairline rounded hover:bg-canvas text-ink cursor-pointer"
-                  >
-                    {copiedUpi ? "✓ Copied" : "Copy"}
-                  </button>
-                </div>
-                <p className="font-semibold text-ink text-[11px]">3. Add Note / Remarks for instant auto-verification:</p>
-                <div className="flex items-center justify-between bg-canvas border border-hairline px-2.5 py-1.5 rounded text-ink font-mono font-bold text-xs">
-                  <span>{cleanToken}</span>
-                  <button
-                    type="button"
-                    onClick={handleCopyNote}
-                    className="ml-2 text-[10px] font-sans font-bold px-2 py-0.5 bg-canvas-soft border border-hairline rounded hover:bg-canvas text-ink cursor-pointer"
-                  >
-                    {copiedNote ? "✓ Copied" : "Copy"}
-                  </button>
-                </div>
-              </div>
-              <p className="text-[11px] text-emerald-600 font-medium">
-                ✓ Regular bank UPI limits (up to ₹1,00,000) and all linked bank accounts work this way without warnings.
-              </p>
-            </div>
-          )}
-        </div>
-
         <p className="micro text-ink-faint mt-md italic">Powered by suedue</p>
       </div>
 
@@ -638,12 +583,6 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                     </>
                   )}
                 </button>
-              </div>
-
-              {/* Payee Name */}
-              <div className="flex items-center justify-between bg-canvas border border-hairline px-3 py-2 rounded-lg">
-                <span className="text-xs text-ink-mute font-medium">Verified Payee:</span>
-                <span className="font-bold text-xs text-ink">{activePayeeName}</span>
               </div>
             </div>
 

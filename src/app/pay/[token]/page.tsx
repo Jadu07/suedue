@@ -94,9 +94,7 @@ export default async function PublicPaymentPage({ params }: { params: Promise<{ 
     await payReq.save();
   }
 
-  const { User } = await import("@/models/User");
-  const admin = await User.findOne({ role: "ADMIN" }).lean();
-  const payeeName = process.env.NEXT_PUBLIC_PAYEE_NAME || admin?.name || "Yashraj Chouhan";
+  const payeeName = process.env.NEXT_PUBLIC_PAYEE_NAME || "Yashraj Chouhan";
 
   return (
     <div className="min-h-screen bg-canvas flex flex-col p-md md:p-huge items-center justify-center">
