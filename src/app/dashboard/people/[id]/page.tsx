@@ -100,10 +100,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         activeSplitIds.add(sid.toString());
         const match = allSplits.find(s => s._id.toString() === sid.toString());
         if (match && match.billId) {
-          const dStr = match.billId.date
-            ? new Date(match.billId.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-            : "";
-          linkedTitles.push(dStr ? `${match.billId.title} (${dStr})` : match.billId.title);
+          linkedTitles.push(match.billId.title);
         }
       }
     }

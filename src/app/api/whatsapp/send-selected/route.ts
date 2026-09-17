@@ -44,11 +44,7 @@ export async function POST(req: NextRequest) {
       
       if (remainingPaise > 0) {
         totalRemainingPaise += remainingPaise;
-        const dateStr = split.billId?.date
-          ? new Date(split.billId.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-          : "";
-        const dateSuffix = dateStr ? ` (${dateStr})` : "";
-        splitDetails.push(`${split.billId.title}${dateSuffix}: ${formatMoney(remainingPaise)}`);
+        splitDetails.push(`${split.billId.title}: ${formatMoney(remainingPaise)}`);
         finalSplitIds.push(split._id);
       }
     }
