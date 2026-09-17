@@ -89,11 +89,27 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   const [isVerifyingUtr, setIsVerifyingUtr] = useState(false);
   const [utrError, setUtrError] = useState("");
   const [verifiedUtr, setVerifiedUtr] = useState<string | null>(initialUtr || null);
-  const [paymentDate, setPaymentDate] = useState<string | null>(
-    initialDate
-      ? new Date(initialDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
-      : null
-  );
+  const [paymentDate, setPaymentDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialDate) {
+      try {
+        const d = new Date(initialDate);
+        if (!isNaN(d.getTime())) {
+          setPaymentDate(
+            d.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })
+          );
+        }
+      } catch {}
+    }
+  }, [initialDate]);
+
   const [showUtrForm, setShowUtrForm] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showInstructionModal, setShowInstructionModal] = useState(false);
@@ -120,6 +136,11 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
       setTimeLeft((p) => {
         if (p <= 1) {
           setStatus("EXPIRED");
+          fetch(`/api/pay/${token}/status`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "EXPIRED" }),
+          }).catch(() => {});
           return 0;
         }
         return p - 1;
@@ -127,7 +148,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
     }, 1000);
 
     return () => clearInterval(id);
-  }, [isDone]);
+  }, [isDone, token]);
 
   // --- POLL DB STATUS: every 2.5 seconds ---
   useEffect(() => {
@@ -135,17 +156,27 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
 
     const id = setInterval(() => {
       fetch(`/api/pay/${token}/status`)
-        .then((r) => r.json())
+        .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
+          if (!data) return;
           if (data.status === "PAID") {
             setStatus("PAID");
             if (data.utr) setVerifiedUtr(data.utr);
             if (data.paymentTime) {
-              setPaymentDate(
-                new Date(data.paymentTime).toLocaleDateString("en-US", {
-                  month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
-                })
-              );
+              try {
+                const d = new Date(data.paymentTime);
+                if (!isNaN(d.getTime())) {
+                  setPaymentDate(
+                    d.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })
+                  );
+                }
+              } catch {}
             }
           }
         })
@@ -183,19 +214,30 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
       await fetch("/api/payments/verify", { method: "POST" }).catch(() => {});
 
       const res = await fetch(`/api/pay/${token}/status`);
-      const data = await res.json();
-      if (data.status === "PAID") {
-        setStatus("PAID");
-        if (data.utr) setVerifiedUtr(data.utr);
-        if (data.paymentTime) {
-          setPaymentDate(
-            new Date(data.paymentTime).toLocaleDateString("en-US", {
-              month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
-            })
-          );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === "PAID") {
+          setStatus("PAID");
+          if (data.utr) setVerifiedUtr(data.utr);
+          if (data.paymentTime) {
+            try {
+              const d = new Date(data.paymentTime);
+              if (!isNaN(d.getTime())) {
+                setPaymentDate(
+                  d.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })
+                );
+              }
+            } catch {}
+          }
+          setIsVerifyingUtr(false);
+          return;
         }
-        setIsVerifyingUtr(false);
-        return;
       }
 
       setUtrSubmitted(true);
@@ -218,13 +260,13 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
         <div className="text-center mb-xl">
           <h1 className="text-2xl font-semibold text-ink mb-xs">Payment Successful</h1>
           <p className="text-sm text-ink-mute">
-            Thank you, {personName}. Your payment has been securely verified.
+            Thank you, {personName || "Friend"}. Your payment has been securely verified.
           </p>
         </div>
         <div className="bg-canvas border border-hairline rounded-xl overflow-hidden shadow-sm text-left">
           <div className="p-md border-b border-hairline flex justify-between items-center bg-gray-50/50">
             <span className="text-sm text-ink-mute">Amount Paid</span>
-            <span className="text-xl font-bold text-ink">{formatMoney(amountPaise)}</span>
+            <span className="text-xl font-bold text-ink">{formatMoney(amountPaise || 0)}</span>
           </div>
           <div className="p-md space-y-md">
             {paymentDate && (
@@ -251,24 +293,9 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   // ===================== EXPIRED / CANCELLED =====================
   if (status === "EXPIRED" || status === "CANCELLED") {
     return (
-      <div className="w-full max-w-[400px] bg-canvas-soft border border-hairline rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-500 mx-auto text-center">
-        <div className="p-xl text-center flex flex-col items-center">
-          <div className="w-20 h-20 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center shadow-sm mb-lg relative overflow-hidden">
-            <div className="absolute inset-0 bg-red-500 opacity-5"></div>
-            <AlertCircle className="w-10 h-10 text-red-400" />
-          </div>
-          <h1 className="text-2xl font-semibold text-ink mb-sm tracking-tight">Not Available</h1>
-          <p className="text-sm text-ink-mute mb-xl leading-relaxed">
-            This payment request has expired or has been cancelled.
-          </p>
-          <div className="w-full bg-canvas border border-hairline rounded-xl p-md flex flex-col items-center gap-sm">
-            <span className="text-[10px] uppercase tracking-widest text-ink-mute font-bold">Request Status</span>
-            <span className="text-xs font-mono font-bold text-red-600 bg-red-50 border border-red-100 px-3 py-1 rounded-full">{status}</span>
-          </div>
-        </div>
-        <div className="bg-canvas border-t border-hairline p-md text-center">
-          <p className="text-[11px] text-ink-faint uppercase tracking-widest font-semibold italic">Powered by suedue</p>
-        </div>
+      <div className="w-full max-w-[448px] text-center my-auto py-xl">
+        <h1 className="text-2xl font-bold text-ink mb-sm tracking-tight">INVALID LINK</h1>
+        <p className="text-sm text-ink-mute">This payment link is invalid or has expired.</p>
       </div>
     );
   }

@@ -26,70 +26,91 @@ export default async function PublicPaymentPage({ params }: { params: Promise<{ 
     payReq = await PaymentRequest.findById(token).populate("billId").populate("personId");
   }
   
-  if (!payReq) {
-    return (
-      <div className="min-h-screen bg-canvas flex items-center justify-center p-xl text-center">
-        <div>
-          <h1 className="display-lg text-ink mb-md">Payment Link Invalid</h1>
-          <p className="body-md text-ink-mute">This payment link is invalid or has expired.</p>
-        </div>
+  const invalidLinkScreen = (
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-xl text-center">
+      <div>
+        <h1 className="text-2xl font-bold text-ink mb-sm tracking-tight">INVALID LINK</h1>
+        <p className="text-sm text-ink-mute">This payment link is invalid or has expired.</p>
       </div>
-    );
+    </div>
+  );
+
+  if (!payReq) {
+    return invalidLinkScreen;
   }
 
-
   const person = payReq.personId;
+  const personName = (person && typeof person === "object" && "name" in person && person.name)
+    ? String(person.name)
+    : "Friend";
+
   let billTitle = "";
-  let isPaid = false;
+  let isPaid = payReq.status === "COMPLETED";
 
   const { PaymentTransaction } = await import("@/models/PaymentTransaction");
 
   let initialUtr = payReq.userProvidedUtr || null;
-  let initialDate = null;
+  let initialDate: string | null = null;
   
   if (payReq.splitIds && payReq.splitIds.length > 0) {
     // Consolidated request
     billTitle = "Consolidated Pending Dues";
-    // Check if ALL splits are paid
     const splits = await Split.find({ _id: { $in: payReq.splitIds } });
-    isPaid = splits.every(s => s.status === "PAID");
+    if (splits && splits.length > 0) {
+      isPaid = isPaid || splits.every(s => s.status === "PAID");
+    }
     
     if (isPaid) {
       const tx = await PaymentTransaction.findOne({ splitId: { $in: payReq.splitIds }, status: "VERIFIED" }).sort({ paymentTime: -1 });
       if (tx) {
-        initialUtr = tx.utr;
-        initialDate = tx.paymentTime.toISOString();
+        initialUtr = tx.utr || initialUtr;
+        if (tx.paymentTime) {
+          try {
+            const d = new Date(tx.paymentTime);
+            if (!isNaN(d.getTime())) {
+              initialDate = d.toISOString();
+            }
+          } catch {
+            initialDate = null;
+          }
+        }
       }
     }
   } else {
     // Single split request
     billTitle = payReq.billId?.title || "Payment Request";
-    const split = await Split.findById(payReq.splitId);
-    isPaid = split?.status === "PAID";
+    const split = payReq.splitId ? await Split.findById(payReq.splitId) : null;
+    isPaid = isPaid || split?.status === "PAID";
     
     if (isPaid) {
       const tx = await PaymentTransaction.findOne({ splitId: split?._id, status: "VERIFIED" }).sort({ paymentTime: -1 });
       if (tx) {
-        initialUtr = tx.utr;
-        initialDate = tx.paymentTime.toISOString();
+        initialUtr = tx.utr || initialUtr;
+        if (tx.paymentTime) {
+          try {
+            const d = new Date(tx.paymentTime);
+            if (!isNaN(d.getTime())) {
+              initialDate = d.toISOString();
+            }
+          } catch {
+            initialDate = null;
+          }
+        }
       }
     }
   }
 
-  let derivedStatus = payReq.status;
-  if (isPaid) {
-    derivedStatus = "PAID";
-  } else if (payReq.status === "ACTIVE" || payReq.status === "EXPIRED") {
-    // Reset expiration to 5 minutes from now whenever the user hits the link
-    payReq.expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-    payReq.status = "ACTIVE";
-    await payReq.save();
-    derivedStatus = "ACTIVE";
+  // Check if expired or cancelled (and not paid)
+  const isExpired = payReq.status === "CANCELLED" || payReq.status === "EXPIRED" || (payReq.expiresAt && new Date() > new Date(payReq.expiresAt));
+  if (!isPaid && isExpired) {
+    return invalidLinkScreen;
   }
+
+  let derivedStatus = isPaid ? "PAID" : "ACTIVE";
 
   let refCode = payReq.refCode;
   if (!refCode) {
-    refCode = "SD" + payReq.secureTokenHash.slice(0, 4).toUpperCase();
+    refCode = "SD" + (payReq.secureTokenHash ? payReq.secureTokenHash.slice(0, 4).toUpperCase() : "PAY");
     payReq.refCode = refCode;
     await payReq.save();
   }
@@ -102,8 +123,8 @@ export default async function PublicPaymentPage({ params }: { params: Promise<{ 
         token={token}
         refCode={refCode}
         billTitle={billTitle}
-        personName={person.name}
-        amountPaise={payReq.requestedAmountPaise}
+        personName={personName}
+        amountPaise={payReq.requestedAmountPaise || 0}
         initialStatus={derivedStatus}
         initialUtr={initialUtr}
         initialDate={initialDate}
