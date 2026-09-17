@@ -96,7 +96,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   );
   const [showUtrForm, setShowUtrForm] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [modalView, setModalView] = useState<"main" | "other_apps" | "manual">("main");
+  const [modalView, setModalView] = useState<"main" | "other_apps" | "manual" | "phonepe_notice">("main");
   const [appSearch, setAppSearch] = useState("");
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [copiedNote, setCopiedNote] = useState(false);
@@ -279,7 +279,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   const cleanToken = (refCode || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
   const amountRupees = (amountPaise / 100).toFixed(2);
 
-  const upiQuery = `pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(activePayeeName)}&am=${amountRupees}&cu=INR${cleanToken ? `&tn=${encodeURIComponent(cleanToken)}` : ""}`;
+  const upiQuery = `pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(activePayeeName)}&am=${amountRupees}&cu=INR${cleanToken ? `&tn=${encodeURIComponent(cleanToken)}&tr=${encodeURIComponent(cleanToken)}` : ""}&mode=02`;
   const genericUpiUrl = `upi://pay?${upiQuery}`;
 
   const triggerAppLaunch = (app: UPIAppConfig) => {
@@ -287,6 +287,12 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
       navigator.clipboard.writeText(cleanToken).catch(() => {});
       setToastMessage(`Note "${cleanToken}" copied!`);
       setTimeout(() => setToastMessage(null), 2500);
+    }
+
+    // PhonePe enforces a hardcoded anti-fraud rule capping external browser intent links to personal VPAs to ₹2,000
+    if (app.id === "phonepe" && amountPaise > 200000) {
+      setModalView("phonepe_notice");
+      return;
     }
 
     const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
@@ -572,11 +578,13 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                     {modalView === "main" && "Pay with UPI"}
                     {modalView === "other_apps" && "Select UPI App"}
                     {modalView === "manual" && "Pay via Bank (To UPI ID)"}
+                    {modalView === "phonepe_notice" && "PhonePe Payment Notice"}
                   </h3>
                   <p className="text-xs text-ink-mute mt-0.5">
                     {modalView === "main" && "Select your preferred app"}
                     {modalView === "other_apps" && "Search 30+ official UPI apps"}
                     {modalView === "manual" && "Bypass ₹2,000 limit & wallet restrictions"}
+                    {modalView === "phonepe_notice" && "Bypass PhonePe's ₹2,000 link restriction"}
                   </p>
                 </div>
               </div>
@@ -842,6 +850,108 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                     className="w-full py-2 px-3 text-center text-xs font-bold text-ink underline hover:text-ink/80 transition cursor-pointer"
                   >
                     Paid without remarks? Verify with 12-digit UTR number →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ================= VIEW 4: PHONEPE SPECIAL BYPASS FOR ₹2000 LIMIT ================= */}
+            {modalView === "phonepe_notice" && (
+              <div className="space-y-3.5">
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-ink leading-relaxed space-y-1.5">
+                  <p className="font-bold flex items-center gap-1.5 text-amber-800">
+                    <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>PhonePe ₹2,000 Link Restriction</span>
+                  </p>
+                  <p className="text-ink-mute text-[11px] leading-relaxed">
+                    PhonePe limits external web links to <strong>₹2,000</strong> and blocks bank accounts (often saying &ldquo;cannot send more than 2,000 via gallery QR&rdquo; even though you clicked a link).
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-ink">Choose how to complete your payment:</p>
+
+                  {/* Option 1: Direct PhonePe transfer without fixed amount limit */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
+                        navigator.clipboard.writeText(cleanToken).catch(() => {});
+                        setToastMessage(`Note "${cleanToken}" copied!`);
+                        setTimeout(() => setToastMessage(null), 2500);
+                      }
+                      // Omitting `am` prevents PhonePe from triggering the fixed-amount external cap
+                      const noAmQuery = `pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(activePayeeName)}&cu=INR${cleanToken ? `&tn=${encodeURIComponent(cleanToken)}&tr=${encodeURIComponent(cleanToken)}` : ""}&mode=02`;
+                      const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+                      if (isAndroid) {
+                        window.location.href = `intent://pay?${noAmQuery}#Intent;scheme=upi;package=com.phonepe.app;end`;
+                      } else {
+                        window.location.href = `phonepe://pay?${noAmQuery}`;
+                      }
+                    }}
+                    className="w-full text-left p-3 bg-canvas-soft hover:bg-canvas active:scale-[0.98] border border-hairline hover:border-ink/30 rounded-xl transition cursor-pointer shadow-2xs space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-ink">1. Open PhonePe (Type ₹{amountRupees} inside)</span>
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">
+                        Recommended
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-ink-mute leading-relaxed">
+                      Opens PhonePe with recipient &amp; note pre-filled. Type ₹{amountRupees} inside the app to pay from any Bank Account with 0 limits!
+                    </p>
+                  </button>
+
+                  {/* Option 2: Pay with Paytm (Works directly as confirmed by user) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const paytmApp = POPULAR_UPI_APPS.find(a => a.id === "paytm");
+                      if (paytmApp) triggerAppLaunch(paytmApp);
+                    }}
+                    className="w-full text-left p-3 bg-canvas-soft hover:bg-canvas active:scale-[0.98] border border-hairline hover:border-ink/30 rounded-xl transition cursor-pointer shadow-2xs space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-ink">2. Pay with Paytm (1-Tap &amp; Pre-filled)</span>
+                      <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">
+                        Fastest
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-ink-mute leading-relaxed">
+                      Paytm allows full bank account payments via links without the ₹2,000 restriction.
+                    </p>
+                  </button>
+
+                  {/* Option 3: Copy UPI ID manually */}
+                  <button
+                    type="button"
+                    onClick={() => setModalView("manual")}
+                    className="w-full text-left p-3 bg-canvas-soft hover:bg-canvas active:scale-[0.98] border border-hairline hover:border-ink/30 rounded-xl transition cursor-pointer shadow-2xs space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-ink">3. Manual Transfer in PhonePe (&ldquo;To UPI ID&rdquo;)</span>
+                    </div>
+                    <p className="text-[11px] text-ink-mute leading-relaxed">
+                      Copy {activeUpiId} and send via &ldquo;To UPI ID&rdquo; in PhonePe.
+                    </p>
+                  </button>
+                </div>
+
+                {/* Force standard link anyway */}
+                <div className="pt-1 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+                      if (isAndroid) {
+                        window.location.href = `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.phonepe.app;end`;
+                      } else {
+                        window.location.href = `phonepe://pay?${upiQuery}`;
+                      }
+                    }}
+                    className="text-[11px] text-ink-mute hover:text-ink underline transition cursor-pointer py-1"
+                  >
+                    Try standard PhonePe link with pre-filled amount anyway →
                   </button>
                 </div>
               </div>
