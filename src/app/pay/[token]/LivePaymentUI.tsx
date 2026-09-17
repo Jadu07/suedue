@@ -96,6 +96,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   );
   const [showUtrForm, setShowUtrForm] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [modalView, setModalView] = useState<"main" | "other_apps" | "manual" | "phonepe_notice">("main");
   const [appSearch, setAppSearch] = useState("");
   const [copiedUpi, setCopiedUpi] = useState(false);
@@ -386,64 +387,21 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
               />
             </div>
             
-            {/* Direct Active Link */}
-            <a
-              href={directUpiLink}
-              onClick={() => {
-                if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
-                  navigator.clipboard.writeText(cleanToken).catch(() => {});
-                  setToastMessage(`Note "${cleanToken}" copied! Paste in remarks`);
-                  setTimeout(() => setToastMessage(null), 3500);
-                }
-              }}
-              className="w-full max-w-xs flex items-center justify-center gap-2 bg-white text-primary px-lg py-3 rounded-full font-bold text-sm hover:bg-gray-100 active:scale-95 transition shadow-md cursor-pointer mb-md text-center"
+            <button
+              type="button"
+              onClick={() => setShowInstructionModal(true)}
+              className="bg-white text-primary px-lg py-sm rounded-full font-bold mb-md hover:bg-gray-100 active:scale-95 transition shadow-sm cursor-pointer"
             >
-              <Smartphone className="w-4 h-4" />
-              <span>Pay with UPI App</span>
-            </a>
+              Pay with Bank / UPI App
+            </button>
 
-            <p className="micro opacity-80 text-center mb-md">Scan QR code or click button above to open your UPI app</p>
-
-            {/* Instruction Card for Amount & Note */}
-            <div className="w-full bg-white/10 border border-white/20 rounded-xl p-3 mb-md text-left text-xs text-white space-y-2">
-              <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-wider text-white/90">
-                <Info className="w-3.5 h-3.5" />
-                <span>Payment Instructions</span>
+            <p className="micro opacity-80 text-center mb-xs">Scan or click to open any UPI / Bank app</p>
+            
+            {cleanToken && (
+              <div className="inline-flex items-center gap-1 bg-white/10 px-sm py-0.5 rounded text-[11px] font-mono tracking-wider mb-sm opacity-90">
+                <span>Note:</span> <span className="font-bold">{cleanToken}</span>
               </div>
-              
-              <div className="flex items-center justify-between bg-black/15 border border-white/10 px-2.5 py-1.5 rounded-lg">
-                <span className="text-white/80 font-medium">Exact Amount:</span>
-                <span className="font-mono font-bold text-sm text-white">₹{amountRupees}</span>
-              </div>
-
-              <div className="flex items-center justify-between bg-black/15 border border-white/10 px-2.5 py-1.5 rounded-lg">
-                <div className="min-w-0">
-                  <span className="text-white/80 font-medium block text-[11px]">Note / Remarks (Required):</span>
-                  <span className="font-mono font-bold text-sm text-white">{cleanToken}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCopyNote}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded bg-white text-primary hover:bg-white/90 active:scale-95 transition shrink-0 cursor-pointer shadow-xs"
-                >
-                  {copiedNote ? (
-                    <>
-                      <Check className="w-3 h-3 text-emerald-600" />
-                      <span className="text-emerald-700">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      <span>Copy Note</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <p className="text-[11px] text-white/80 leading-snug pt-0.5">
-                ⚠️ Ensure amount is <strong className="text-white font-mono">₹{amountRupees}</strong> and paste Note <strong className="text-white font-mono">{cleanToken}</strong> in remarks for instant automatic confirmation!
-              </p>
-            </div>
+            )}
 
             <div className="flex items-center justify-center gap-1.5 mt-sm text-xs opacity-70">
               {timeLeft > 0 ? (
@@ -590,6 +548,130 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
 
         <p className="micro text-ink-faint mt-md italic">Powered by suedue</p>
       </div>
+
+      {/* ===================== PAY WITH BANK / UPI APP POPUP MODAL ===================== */}
+      {showInstructionModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-canvas border border-hairline rounded-t-2xl sm:rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 text-left animate-in slide-in-from-bottom-6 duration-200 relative">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-hairline pb-3">
+              <div>
+                <h3 className="font-bold text-ink text-base">Pay with Bank / UPI App</h3>
+                <p className="text-xs text-ink-mute mt-0.5">Please review instructions before paying</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowInstructionModal(false)}
+                className="p-1 text-ink-mute hover:text-ink rounded-lg transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Instruction Box */}
+            <div className="bg-canvas-soft border border-hairline rounded-xl p-3.5 space-y-3">
+              <div className="flex items-center gap-2 text-ink font-bold text-xs">
+                <Info className="w-4 h-4 text-primary shrink-0" />
+                <span>Payment Instructions</span>
+              </div>
+
+              <p className="text-xs text-ink-mute leading-relaxed">
+                Ensure the exact amount is entered and paste the <strong className="text-ink">Note</strong> into your payment remarks for instant auto-verification:
+              </p>
+
+              {/* Exact Amount */}
+              <div className="flex items-center justify-between bg-canvas border border-hairline px-3 py-2 rounded-lg">
+                <span className="text-xs text-ink-mute font-medium">Payable Amount:</span>
+                <span className="font-mono font-bold text-base text-ink">₹{amountRupees}</span>
+              </div>
+
+              {/* Note / Remarks */}
+              <div className="flex items-center justify-between bg-canvas border border-hairline px-3 py-2 rounded-lg gap-2">
+                <div className="min-w-0">
+                  <span className="text-[10px] text-ink-mute uppercase font-bold tracking-wider block">
+                    Note / Remarks (Required)
+                  </span>
+                  <span className="font-mono font-bold text-sm text-ink">{cleanToken}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyNote}
+                  className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-hairline bg-canvas-soft hover:bg-canvas active:scale-95 transition shrink-0 cursor-pointer shadow-2xs"
+                >
+                  {copiedNote ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-ink-mute" />
+                      <span>Copy Note</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Receiving UPI ID */}
+              <div className="flex items-center justify-between bg-canvas border border-hairline px-3 py-2 rounded-lg gap-2">
+                <div className="min-w-0">
+                  <span className="text-[10px] text-ink-mute uppercase font-bold tracking-wider block">
+                    Receiving UPI ID
+                  </span>
+                  <span className="font-mono font-bold text-sm text-ink truncate block">{activeUpiId}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyUpi}
+                  className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-hairline bg-canvas-soft hover:bg-canvas active:scale-95 transition shrink-0 cursor-pointer shadow-2xs"
+                >
+                  {copiedUpi ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-ink-mute" />
+                      <span>Copy ID</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Payee Name */}
+              <div className="flex items-center justify-between bg-canvas border border-hairline px-3 py-2 rounded-lg">
+                <span className="text-xs text-ink-mute font-medium">Verified Payee:</span>
+                <span className="font-bold text-xs text-ink">{activePayeeName}</span>
+              </div>
+            </div>
+
+            {/* Button below instruction */}
+            <div className="pt-1 space-y-2">
+              <a
+                href={directUpiLink}
+                onClick={() => {
+                  if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
+                    navigator.clipboard.writeText(cleanToken).catch(() => {});
+                    setToastMessage(`Note "${cleanToken}" copied!`);
+                    setTimeout(() => setToastMessage(null), 3000);
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-ink text-canvas hover:bg-ink/90 active:scale-[0.98] rounded-xl text-sm font-bold transition cursor-pointer shadow-sm text-center"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>Open Bank / UPI App &amp; Pay ₹{amountRupees}</span>
+              </a>
+
+              <p className="text-[11px] text-center text-ink-mute">
+                Note <strong className="text-ink font-mono">{cleanToken}</strong> will be copied automatically to your clipboard.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* ===================== CHOOSE UPI APP POPUP MODAL (CURRENTLY HIDDEN) ===================== */}
       {false && showModal && (
