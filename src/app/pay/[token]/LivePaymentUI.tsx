@@ -11,7 +11,9 @@ import {
   Info, 
   Search, 
   ChevronRight, 
-  ArrowLeft
+  ArrowLeft,
+  Building2,
+  ShieldAlert
 } from "lucide-react";
 import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/button";
@@ -79,7 +81,7 @@ function AppOfficialFavicon({ app }: { app: UPIAppConfig }) {
   );
 }
 
-export default function LivePaymentUI({ token, refCode, billTitle, personName, amountPaise, initialStatus, initialUtr, initialDate, upiId }: any) {
+export default function LivePaymentUI({ token, refCode, billTitle, personName, amountPaise, initialStatus, initialUtr, initialDate, upiId, payeeName }: any) {
   const [status, setStatus] = useState(initialStatus);
   const [timeLeft, setTimeLeft] = useState(300);
   const [utr, setUtr] = useState("");
@@ -100,6 +102,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   const [copiedNote, setCopiedNote] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isWhatsAppBrowser, setIsWhatsAppBrowser] = useState(false);
+  const [showDirectBankGuide, setShowDirectBankGuide] = useState(false);
 
   useEffect(() => {
     if (typeof navigator !== "undefined") {
@@ -272,10 +275,11 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
 
   // ===================== ACTIVE PAYMENT =====================
   const activeUpiId = upiId || process.env.NEXT_PUBLIC_UPI_ID || "yashrajchouhan@fam";
+  const activePayeeName = payeeName || process.env.NEXT_PUBLIC_PAYEE_NAME || "Yashraj Chouhan";
   const cleanToken = (refCode || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
   const amountRupees = (amountPaise / 100).toFixed(2);
 
-  const upiQuery = `pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent("suedue")}&am=${amountRupees}&cu=INR${cleanToken ? `&tn=${encodeURIComponent(cleanToken)}` : ""}`;
+  const upiQuery = `pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(activePayeeName)}&am=${amountRupees}&cu=INR${cleanToken ? `&tn=${encodeURIComponent(cleanToken)}` : ""}`;
   const genericUpiUrl = `upi://pay?${upiQuery}`;
 
   const triggerAppLaunch = (app: UPIAppConfig) => {
@@ -478,6 +482,60 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
           </div>
         )}
 
+        {/* Direct Bank Account / ₹2000 Limit Helper Card */}
+        <div className="bg-canvas border border-hairline rounded-xl p-3.5 mb-lg text-left shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setShowDirectBankGuide(!showDirectBankGuide)}
+            className="w-full flex items-center justify-between text-xs font-bold text-ink cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5">
+              <Building2 className="w-4 h-4 text-primary" />
+              <span>Bank Account blocked or ₹2,000 limit?</span>
+            </span>
+            <span className="text-[11px] text-primary underline">
+              {showDirectBankGuide ? "Hide" : "Pay via Bank →"}
+            </span>
+          </button>
+
+          {showDirectBankGuide && (
+            <div className="mt-2.5 pt-2.5 border-t border-hairline text-xs text-ink-mute space-y-2 animate-in fade-in duration-150">
+              <p className="leading-relaxed">
+                UPI apps (like PhonePe) restrict web links to Wallets or cap them at ₹2,000.
+                To pay directly from your <strong>Bank Account with no limits or warnings</strong>:
+              </p>
+              <div className="bg-canvas-soft border border-hairline rounded-lg p-2.5 space-y-2">
+                <p className="font-semibold text-ink text-[11px]">1. Open PhonePe, GPay, or Paytm</p>
+                <p className="font-semibold text-ink text-[11px]">2. Tap &ldquo;To UPI ID&rdquo; & enter:</p>
+                <div className="flex items-center justify-between bg-canvas border border-hairline px-2.5 py-1.5 rounded text-ink font-mono font-bold text-xs">
+                  <span>{activeUpiId}</span>
+                  <button
+                    type="button"
+                    onClick={handleCopyUpi}
+                    className="ml-2 text-[10px] font-sans font-bold px-2 py-0.5 bg-canvas-soft border border-hairline rounded hover:bg-canvas text-ink cursor-pointer"
+                  >
+                    {copiedUpi ? "✓ Copied" : "Copy"}
+                  </button>
+                </div>
+                <p className="font-semibold text-ink text-[11px]">3. Add Note / Remarks for instant auto-verification:</p>
+                <div className="flex items-center justify-between bg-canvas border border-hairline px-2.5 py-1.5 rounded text-ink font-mono font-bold text-xs">
+                  <span>{cleanToken}</span>
+                  <button
+                    type="button"
+                    onClick={handleCopyNote}
+                    className="ml-2 text-[10px] font-sans font-bold px-2 py-0.5 bg-canvas-soft border border-hairline rounded hover:bg-canvas text-ink cursor-pointer"
+                  >
+                    {copiedNote ? "✓ Copied" : "Copy"}
+                  </button>
+                </div>
+              </div>
+              <p className="text-[11px] text-emerald-600 font-medium">
+                ✓ Regular bank UPI limits (up to ₹1,00,000) and all linked bank accounts work this way without warnings.
+              </p>
+            </div>
+          )}
+        </div>
+
         <p className="micro text-ink-faint mt-md italic">Powered by suedue</p>
       </div>
 
@@ -513,12 +571,12 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                   <h3 className="font-bold text-ink text-base">
                     {modalView === "main" && "Pay with UPI"}
                     {modalView === "other_apps" && "Select UPI App"}
-                    {modalView === "manual" && "Copy Payment Details"}
+                    {modalView === "manual" && "Pay via Bank (To UPI ID)"}
                   </h3>
                   <p className="text-xs text-ink-mute mt-0.5">
                     {modalView === "main" && "Select your preferred app"}
                     {modalView === "other_apps" && "Search 30+ official UPI apps"}
-                    {modalView === "manual" && "For NetBanking, IMPS, or bank apps"}
+                    {modalView === "manual" && "Bypass ₹2,000 limit & wallet restrictions"}
                   </p>
                 </div>
               </div>
@@ -575,6 +633,28 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                   </div>
                   <ChevronRight className="w-4 h-4 text-ink-mute" />
                 </button>
+
+                {/* Bank Account Direct Bypass Option */}
+                <div className="bg-canvas-soft border border-hairline rounded-xl p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-bold text-ink flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-primary" />
+                        <span>Paying from Bank Account?</span>
+                      </p>
+                      <p className="text-[11px] text-ink-mute leading-relaxed">
+                        If PhonePe/GPay restricts bank accounts or shows a ₹2,000 limit, pay directly to UPI ID.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setModalView("manual")}
+                      className="px-2.5 py-1.5 bg-canvas border border-hairline hover:border-ink/20 rounded-lg text-xs font-bold text-ink whitespace-nowrap active:scale-95 transition shadow-2xs cursor-pointer shrink-0"
+                    >
+                      Pay via Bank →
+                    </button>
+                  </div>
+                </div>
 
                 {/* Manual Transfer / Copy Note Action */}
                 <div className="pt-2 border-t border-hairline">
@@ -661,8 +741,28 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
             {/* ================= VIEW 3: COPY MESSAGE / DETAILS FOR INSTANT VERIFICATION ================= */}
             {modalView === "manual" && (
               <div className="space-y-3.5">
-                <div className="bg-canvas-soft border border-hairline rounded-xl p-3 text-xs text-ink leading-relaxed">
-                  Transfer from any NetBanking or banking app using the details below. <strong className="font-bold">Be sure to paste the Note in remarks</strong> for instant verification!
+                <div className="bg-canvas-soft border border-hairline rounded-xl p-3 text-xs text-ink leading-relaxed space-y-1.5">
+                  <p className="font-bold flex items-center gap-1.5 text-ink">
+                    <Building2 className="w-3.5 h-3.5 text-primary" />
+                    <span>Direct UPI ID Transfer (Bank Accounts Enabled)</span>
+                  </p>
+                  <p className="text-ink-mute text-[11px] leading-relaxed">
+                    UPI apps (like PhonePe) restrict browser links to wallets or ₹2,000 max. 
+                    To pay from any <strong>Bank Account</strong> with full limits, open PhonePe/GPay, tap <strong>&ldquo;To UPI ID&rdquo;</strong>, and enter these details:
+                  </p>
+                </div>
+
+                {/* Verified Payee Name */}
+                <div className="bg-canvas border border-hairline rounded-xl p-3 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-ink-mute tracking-wider block">
+                      Verified Payee Name
+                    </span>
+                    <span className="font-bold text-sm text-ink truncate block">{activePayeeName}</span>
+                  </div>
+                  <span className="text-[11px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                    Verified
+                  </span>
                 </div>
 
                 {/* Copy Card: Note / Token */}
