@@ -120,6 +120,15 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isWhatsAppBrowser, setIsWhatsAppBrowser] = useState(false);
 
+  const filteredApps = useMemo(() => {
+    const q = appSearch.trim().toLowerCase();
+    if (!q) return POPULAR_UPI_APPS;
+    return POPULAR_UPI_APPS.filter(a => 
+      a.name.toLowerCase().includes(q) || 
+      a.domain.toLowerCase().includes(q)
+    );
+  }, [appSearch]);
+
   useEffect(() => {
     if (typeof navigator !== "undefined") {
       setIsWhatsAppBrowser(/WhatsApp/i.test(navigator.userAgent));
@@ -371,15 +380,6 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
 
   const mins = Math.floor(timeLeft / 60);
   const secs = (timeLeft % 60).toString().padStart(2, "0");
-
-  const filteredApps = useMemo(() => {
-    const q = appSearch.trim().toLowerCase();
-    if (!q) return POPULAR_UPI_APPS;
-    return POPULAR_UPI_APPS.filter(a => 
-      a.name.toLowerCase().includes(q) || 
-      a.domain.toLowerCase().includes(q)
-    );
-  }, [appSearch]);
 
   return (
     <>
