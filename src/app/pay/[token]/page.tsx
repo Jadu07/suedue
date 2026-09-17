@@ -105,6 +105,7 @@ export default async function PublicPaymentPage({ params }: { params: Promise<{ 
         initialStatus={derivedStatus}
         initialUtr={initialUtr}
         initialDate={initialDate}
+        upiId={process.env.NEXT_PUBLIC_UPI_ID || "yashrajchouhan@fam"}
       />
     </div>
   );

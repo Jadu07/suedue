@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, Copy, Check, Smartphone, QrCode } from "lucide-react";
 import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 
-export default function LivePaymentUI({ token, refCode, billTitle, personName, amountPaise, initialStatus, initialUtr, initialDate }: any) {
+export default function LivePaymentUI({ token, refCode, billTitle, personName, amountPaise, initialStatus, initialUtr, initialDate, upiId }: any) {
   const [status, setStatus] = useState(initialStatus);
   const [timeLeft, setTimeLeft] = useState(300);
   const [utr, setUtr] = useState("");
@@ -19,6 +19,16 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
       : null
   );
   const [showUtrForm, setShowUtrForm] = useState(false);
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [copiedNote, setCopiedNote] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
+  const [isWhatsAppBrowser, setIsWhatsAppBrowser] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined") {
+      setIsWhatsAppBrowser(/WhatsApp/i.test(navigator.userAgent));
+    }
+  }, []);
 
   const isDone = status === "PAID" || status === "COMPLETED" || status === "EXPIRED" || status === "CANCELLED";
 
@@ -189,69 +199,245 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   }
 
   // ===================== ACTIVE PAYMENT =====================
-  // Clean token with NO SPACES (e.g. "SD7A8B") for 100% UPI compatibility across all banking apps
+  const activeUpiId = upiId || process.env.NEXT_PUBLIC_UPI_ID || "yashrajchouhan@fam";
   const cleanToken = (refCode || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
-  const upiUrl = `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "test@ybl"}&pn=suedue&am=${amountPaise / 100}&cu=INR${cleanToken ? `&tn=${cleanToken}` : ""}`;
+  const amountRupees = (amountPaise / 100).toFixed(2);
+
+  // Standard UPI URI query string
+  const upiQuery = `pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent("suedue")}&am=${amountRupees}&cu=INR${cleanToken ? `&tn=${encodeURIComponent(cleanToken)}` : ""}`;
+
+  const upiUrls = {
+    generic: `upi://pay?${upiQuery}`,
+    intent: `intent://pay?${upiQuery}#Intent;scheme=upi;end`,
+    gpay: `tez://upi/pay?${upiQuery}`,
+    phonepe: `phonepe://pay?${upiQuery}`,
+    paytm: `paytmmp://pay?${upiQuery}`,
+    cred: `credpay://upi/pay?${upiQuery}`,
+  };
+
+  const handleOpenGenericChooser = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+    if (isAndroid) {
+      window.location.href = upiUrls.intent;
+    } else {
+      window.location.href = upiUrls.generic;
+    }
+  };
+
+  const handleCopyUpi = () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(activeUpiId);
+      setCopiedUpi(true);
+      setTimeout(() => setCopiedUpi(false), 2000);
+    }
+  };
+
+  const handleCopyNote = () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard && cleanToken) {
+      navigator.clipboard.writeText(cleanToken);
+      setCopiedNote(true);
+      setTimeout(() => setCopiedNote(false), 2000);
+    }
+  };
+
   const mins = Math.floor(timeLeft / 60);
   const secs = (timeLeft % 60).toString().padStart(2, "0");
 
   return (
-    <div className="w-full max-w-[448px] bg-canvas-soft border border-hairline rounded-xl shadow-lg p-xl md:p-xxl text-center">
-      <div className="mb-xl">
+    <div className="w-full max-w-[448px] bg-canvas-soft border border-hairline rounded-2xl shadow-lg p-5 sm:p-6 text-center">
+      <div className="mb-4">
         <p className="text-ink-mute micro uppercase tracking-wider mb-xs">Payment Request</p>
         <h1 className="display-md text-ink">{billTitle}</h1>
       </div>
 
-      <div className="mb-xl py-lg border-y border-hairline">
+      <div className="mb-4 py-3 border-y border-hairline">
         <p className="text-ink-mute body-md mb-xs">Amount Due</p>
-        <p className="display-xl text-primary">{formatMoney(amountPaise)}</p>
+        <p className="display-xl text-primary font-black">{formatMoney(amountPaise)}</p>
       </div>
 
-      <p className="body-md text-ink-mute mb-xl">
-        Hi {personName}, please complete your payment for the above bill. Once paid, your payment will be automatically verified.
+      <p className="text-xs text-ink-mute mb-5 leading-relaxed">
+        Hi {personName}, select your preferred UPI app below to complete your payment. Once paid, your payment will be verified automatically.
       </p>
 
       {!showUtrForm ? (
-        <div className="bg-primary text-on-primary p-lg rounded-lg mb-lg flex flex-col items-center">
-          <p className="body-strong mb-md">Pay using UPI</p>
-          <div className="bg-white p-sm rounded-md mb-md w-48 h-48 flex items-center justify-center text-ink-mute border-4 border-white overflow-hidden relative">
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`}
-              alt="UPI QR Code"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <a
-            href={upiUrl}
-            className="bg-white text-primary px-lg py-sm rounded-full font-bold mb-md hover:bg-gray-100 transition shadow-sm"
-          >
-            Pay with UPI App
-          </a>
-          <p className="micro opacity-80 text-center mb-xs">Scan or click to open any UPI app</p>
-          
-          {cleanToken && (
-            <div className="inline-flex items-center gap-1 bg-white/10 px-sm py-0.5 rounded text-[11px] font-mono tracking-wider mb-sm opacity-90">
-              <span>Note:</span> <span className="font-bold">{cleanToken}</span>
+        <div className="bg-canvas border border-hairline rounded-2xl p-4 sm:p-5 shadow-2xs mb-5 space-y-3.5 text-center">
+          {/* Tip for in-app browsers like WhatsApp */}
+          {isWhatsAppBrowser && (
+            <div className="bg-canvas-soft border border-hairline rounded-xl p-2.5 text-[11px] text-ink-mute text-left flex items-start gap-2">
+              <span className="text-sm shrink-0">💡</span>
+              <p>
+                <strong>Tip:</strong> If your UPI app doesn&apos;t open from WhatsApp, tap the <strong>3 dots (⋮)</strong> at top right and choose <strong>&ldquo;Open in Chrome / Browser&rdquo;</strong>.
+              </p>
             </div>
           )}
 
-          <div className="flex items-center justify-center gap-1.5 mt-sm text-xs opacity-70">
-            {timeLeft > 0 ? (
-              <>
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                <span>Verifying · {mins}:{secs}</span>
-              </>
-            ) : (
-              <span className="text-yellow-200">Verification timed out</span>
+          {/* Section Heading */}
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-ink">Choose UPI App to Pay</p>
+            <p className="text-[11px] text-ink-mute mt-0.5">Select any app installed on your phone</p>
+          </div>
+
+          {/* App Selector Grid */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* Google Pay */}
+            <a
+              href={upiUrls.gpay}
+              className="flex items-center justify-center gap-2 py-2.5 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20"
+            >
+              <span className="w-5 h-5 rounded-full flex items-center justify-center bg-white border border-gray-200 font-black text-blue-600 text-[11px] shadow-2xs">
+                G
+              </span>
+              <span>Google Pay</span>
+            </a>
+
+            {/* PhonePe */}
+            <a
+              href={upiUrls.phonepe}
+              className="flex items-center justify-center gap-2 py-2.5 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20"
+            >
+              <span className="w-5 h-5 rounded-full flex items-center justify-center bg-[#5f259f] text-white font-bold text-[10px] shadow-2xs">
+                Pe
+              </span>
+              <span>PhonePe</span>
+            </a>
+
+            {/* Paytm */}
+            <a
+              href={upiUrls.paytm}
+              className="flex items-center justify-center gap-2 py-2.5 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20"
+            >
+              <span className="w-5 h-5 rounded-full flex items-center justify-center bg-[#00b9f5] text-white font-black text-[8px] shadow-2xs">
+                Pay
+              </span>
+              <span>Paytm</span>
+            </a>
+
+            {/* CRED */}
+            <a
+              href={upiUrls.cred}
+              className="flex items-center justify-center gap-2 py-2.5 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20"
+            >
+              <span className="w-5 h-5 rounded-full flex items-center justify-center bg-black text-white font-black text-[9px] shadow-2xs">
+                CR
+              </span>
+              <span>CRED</span>
+            </a>
+          </div>
+
+          {/* All Other UPI Apps (Forces native OS App Chooser dialog) */}
+          <button
+            type="button"
+            onClick={handleOpenGenericChooser}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-ink text-canvas hover:bg-ink/90 active:scale-[0.98] rounded-xl font-bold text-xs transition shadow-sm"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span>Open Other UPI App (BHIM, Navi, etc.)</span>
+          </button>
+
+          {/* Note Reminder Box */}
+          {cleanToken && (
+            <div className="bg-canvas-soft border border-hairline rounded-xl p-2.5 flex items-center justify-between gap-2 text-left">
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase font-bold text-ink-mute tracking-wider block">
+                  Payment Note / Remarks
+                </span>
+                <span className="font-mono font-bold text-xs text-ink">{cleanToken}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCopyNote}
+                className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-hairline bg-canvas hover:bg-canvas-soft active:scale-95 transition"
+              >
+                {copiedNote ? (
+                  <>
+                    <Check className="w-3 h-3 text-emerald-600" />
+                    <span className="text-emerald-600">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3 text-ink-mute" />
+                    <span>Copy Note</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Copy UPI ID Bar */}
+          <div className="bg-canvas-soft border border-hairline rounded-xl p-2.5 flex items-center justify-between gap-2 text-left">
+            <div className="min-w-0">
+              <span className="text-[10px] uppercase font-bold text-ink-mute tracking-wider block">
+                Receiving UPI ID
+              </span>
+              <span className="font-mono font-bold text-xs text-ink truncate block">{activeUpiId}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCopyUpi}
+              className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-hairline bg-canvas hover:bg-canvas-soft active:scale-95 transition"
+            >
+              {copiedUpi ? (
+                <>
+                  <Check className="w-3 h-3 text-emerald-600" />
+                  <span className="text-emerald-600">Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3 text-ink-mute" />
+                  <span>Copy ID</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Toggle QR Code */}
+          <div className="pt-0.5">
+            <button
+              type="button"
+              onClick={() => setShowQrCode(!showQrCode)}
+              className="text-xs font-semibold text-ink-mute hover:text-ink transition inline-flex items-center gap-1.5"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span>{showQrCode ? "Hide QR Code" : "Scan with another phone / QR Code"}</span>
+            </button>
+
+            {showQrCode && (
+              <div className="mt-2.5 p-3 bg-white rounded-xl border border-hairline inline-block shadow-sm animate-in fade-in zoom-in-95 duration-200">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUrls.generic)}`}
+                  alt="UPI QR Code"
+                  className="w-40 h-40 object-cover mx-auto"
+                />
+                <p className="text-[10px] text-gray-500 mt-1 font-medium">Scan using any UPI App</p>
+              </div>
             )}
           </div>
 
-          <button
-            onClick={() => { setShowUtrForm(true); setUtrSubmitted(false); }}
-            className="mt-md text-xs text-white/80 underline hover:text-white transition text-center"
-          >
-            Paid via an app without notes? Verify with UTR number →
-          </button>
+          {/* Live Verifying Pill */}
+          <div className="flex items-center justify-center gap-2 pt-1 text-xs font-medium text-ink-mute">
+            {timeLeft > 0 ? (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>Auto-verifying payment · {mins}:{secs}</span>
+              </>
+            ) : (
+              <span className="text-amber-600 font-bold">Verification window expired</span>
+            )}
+          </div>
+
+          {/* UTR Fallback Button */}
+          <div className="pt-0.5">
+            <button
+              onClick={() => { setShowUtrForm(true); setUtrSubmitted(false); }}
+              className="text-xs text-ink-mute hover:text-ink underline transition text-center"
+            >
+              Paid via an app without notes? Verify with UTR number →
+            </button>
+          </div>
         </div>
       ) : (
         <div className="bg-canvas border border-hairline p-lg rounded-lg mb-lg text-left animate-in fade-in slide-in-from-bottom-4 duration-500">
