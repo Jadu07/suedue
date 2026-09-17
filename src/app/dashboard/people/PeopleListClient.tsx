@@ -201,11 +201,18 @@ export default function PeopleListClient({ initialPeople }: { initialPeople: Per
           return (
             <div
               key={person.id}
-              onClick={() => router.push(`/dashboard/people/${person.id}`)}
-              className="block bg-canvas border border-hairline rounded-xl p-3.5 shadow-2xs active:bg-canvas-soft/80 hover:border-ink/30 transition-all cursor-pointer select-none space-y-2.5"
+              className="relative block bg-canvas border border-hairline rounded-xl p-3.5 shadow-2xs active:bg-canvas-soft/80 active:scale-[0.99] hover:border-ink/30 transition-all select-none space-y-2.5"
             >
+              {/* Full-card tap target with Next.js prefetching */}
+              <Link
+                href={`/dashboard/people/${person.id}`}
+                prefetch={true}
+                className="absolute inset-0 z-0 rounded-xl"
+                aria-label={`View details for ${person.name}`}
+              />
+
               {/* Top Row: Circular Avatar, Name, Phone & 3-Dot Menu */}
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 relative z-10 pointer-events-none">
                 <div className="flex items-center gap-3 min-w-0">
                   <UserAvatar name={person.name} size="md" />
                   <div className="min-w-0">
@@ -219,7 +226,12 @@ export default function PeopleListClient({ initialPeople }: { initialPeople: Per
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                <div 
+                  className="flex items-center gap-1 shrink-0 pointer-events-auto" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
                   <PersonActions 
                     personId={person.id} 
                     personName={person.name} 
@@ -232,7 +244,7 @@ export default function PeopleListClient({ initialPeople }: { initialPeople: Per
               </div>
 
               {/* Middle Row: Outstanding Balance */}
-              <div className="flex items-center justify-between pt-2 border-t border-hairline">
+              <div className="flex items-center justify-between pt-2 border-t border-hairline relative z-10 pointer-events-none">
                 <span className="text-[11px] text-ink-mute uppercase tracking-wider font-semibold">Balance:</span>
                 {hasDues ? (
                   <span className="text-sm font-black text-ink">
