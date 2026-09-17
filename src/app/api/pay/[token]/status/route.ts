@@ -27,31 +27,54 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     const { PaymentTransaction } = await import("@/models/PaymentTransaction");
     let tx = null;
 
+    const sIds = (payReq.splitIds && payReq.splitIds.length > 0) ? payReq.splitIds : (payReq.splitId ? [payReq.splitId] : []);
+
+    // 1. Check if splits are already marked PAID
+    if (!isPaid && sIds.length > 0) {
+      const splits = await Split.find({ _id: { $in: sIds } });
+      if (splits && splits.length > 0) {
+        isPaid = splits.every(s => s.status === "PAID");
+      }
+    }
+
+    // 2. Check if a VERIFIED transaction exists for this refCode, split, or paymentRequestId
     if (!isPaid) {
-      if (payReq.splitIds && payReq.splitIds.length > 0) {
-        const splits = await Split.find({ _id: { $in: payReq.splitIds } });
-        if (splits && splits.length > 0) {
-          isPaid = splits.every(s => s.status === "PAID");
-        }
-      } else if (payReq.splitId) {
-        const split = await Split.findById(payReq.splitId);
-        if (split) {
-          isPaid = split.status === "PAID";
-          pendingStatus = split.status;
-        }
+      const orConditions: any[] = [{ paymentRequestId: payReq._id }];
+      if (sIds.length > 0) orConditions.push({ splitId: { $in: sIds } });
+      if (payReq.refCode) orConditions.push({ refCode: payReq.refCode });
+      if (payReq.userProvidedUtr) orConditions.push({ utr: payReq.userProvidedUtr });
+
+      tx = await PaymentTransaction.findOne({
+        $or: orConditions,
+        status: "VERIFIED"
+      }).sort({ paymentTime: -1 });
+
+      if (tx) {
+        isPaid = true;
       }
     }
 
     if (isPaid) {
-      if (payReq.splitIds && payReq.splitIds.length > 0) {
-        tx = await PaymentTransaction.findOne({ splitId: { $in: payReq.splitIds }, status: "VERIFIED" }).sort({ paymentTime: -1 });
-      } else if (payReq.splitId) {
-        tx = await PaymentTransaction.findOne({ splitId: payReq.splitId, status: "VERIFIED" }).sort({ paymentTime: -1 });
+      if (!tx) {
+        const orConditions: any[] = [{ paymentRequestId: payReq._id }];
+        if (sIds.length > 0) orConditions.push({ splitId: { $in: sIds } });
+        if (payReq.refCode) orConditions.push({ refCode: payReq.refCode });
+        if (payReq.userProvidedUtr) orConditions.push({ utr: payReq.userProvidedUtr });
+
+        tx = await PaymentTransaction.findOne({
+          $or: orConditions,
+          status: "VERIFIED"
+        }).sort({ paymentTime: -1 });
       }
 
       if (payReq.status !== "COMPLETED") {
         payReq.status = "COMPLETED";
         await payReq.save();
+      }
+
+      // Ensure splits are updated
+      if (sIds.length > 0) {
+        await Split.updateMany({ _id: { $in: sIds } }, { $set: { status: "PAID" } });
       }
 
       let paymentTimeIso = new Date().toISOString();
@@ -68,10 +91,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         utr: tx?.utr || payReq.userProvidedUtr || "N/A",
         paymentTime: paymentTimeIso
       });
-    }
-
-    if (payReq.status === "EXPIRED" || payReq.status === "CANCELLED") {
-      return NextResponse.json({ success: true, status: payReq.status });
     }
 
     return NextResponse.json({ success: true, status: pendingStatus });
@@ -99,31 +118,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     await payReq.save();
 
     return NextResponse.json({ success: true, message: "UTR submitted successfully" });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
-}
-
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  try {
-    await dbConnect();
-    const { token } = await params;
-    const body = await req.json().catch(() => ({}));
-    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-
-    let payReq = await PaymentRequest.findOne({ secureTokenHash: tokenHash });
-    if (!payReq) payReq = await PaymentRequest.findOne({ rawToken: token });
-    if (!payReq) payReq = await PaymentRequest.findOne({ secureTokenHash: token });
-    if (!payReq && token.match(/^[0-9a-fA-F]{24}$/)) payReq = await PaymentRequest.findById(token);
-
-    if (!payReq) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-    if (body.status === "EXPIRED" && payReq.status !== "COMPLETED") {
-      payReq.status = "EXPIRED";
-      await payReq.save();
-    }
-
-    return NextResponse.json({ success: true, status: payReq.status });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

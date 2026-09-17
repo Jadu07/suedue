@@ -126,7 +126,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
     }
   }, []);
 
-  const isDone = status === "PAID" || status === "COMPLETED" || status === "EXPIRED" || status === "CANCELLED";
+  const isDone = status === "PAID" || status === "COMPLETED" || status === "CANCELLED";
 
   // --- TIMER: ticks every 1 second ---
   useEffect(() => {
@@ -135,12 +135,6 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
     const id = setInterval(() => {
       setTimeLeft((p) => {
         if (p <= 1) {
-          setStatus("EXPIRED");
-          fetch(`/api/pay/${token}/status`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "EXPIRED" }),
-          }).catch(() => {});
           return 0;
         }
         return p - 1;
@@ -148,7 +142,16 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
     }, 1000);
 
     return () => clearInterval(id);
-  }, [isDone, token]);
+  }, [isDone]);
+
+  // --- BACKGROUND VERIFY TRIGGER: Run every 4s to catch incoming emails ---
+  useEffect(() => {
+    if (isDone) return;
+    const vId = setInterval(() => {
+      fetch("/api/payments/verify", { method: "POST" }).catch(() => {});
+    }, 4000);
+    return () => clearInterval(vId);
+  }, [isDone]);
 
   // --- POLL DB STATUS: every 2.5 seconds ---
   useEffect(() => {
@@ -290,12 +293,12 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
     );
   }
 
-  // ===================== EXPIRED / CANCELLED =====================
-  if (status === "EXPIRED" || status === "CANCELLED") {
+  // ===================== CANCELLED =====================
+  if (status === "CANCELLED") {
     return (
       <div className="w-full max-w-[448px] text-center my-auto py-xl">
         <h1 className="text-2xl font-bold text-ink mb-sm tracking-tight">INVALID LINK</h1>
-        <p className="text-sm text-ink-mute">This payment link is invalid or has expired.</p>
+        <p className="text-sm text-ink-mute">This payment link is invalid or has been cancelled.</p>
       </div>
     );
   }
@@ -436,7 +439,10 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                   <span>Verifying · {mins}:{secs}</span>
                 </>
               ) : (
-                <span className="text-yellow-200">Verification timed out</span>
+                <span className="flex items-center gap-1.5 text-yellow-200">
+                  <span className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></span>
+                  <span>Checking for payment...</span>
+                </span>
               )}
             </div>
 

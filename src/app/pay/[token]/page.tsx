@@ -39,6 +39,11 @@ export default async function PublicPaymentPage({ params }: { params: Promise<{ 
     return invalidLinkScreen;
   }
 
+  // Only cancelled requests are invalid
+  if (payReq.status === "CANCELLED") {
+    return invalidLinkScreen;
+  }
+
   const person = payReq.personId;
   const personName = (person && typeof person === "object" && "name" in person && person.name)
     ? String(person.name)
@@ -49,61 +54,66 @@ export default async function PublicPaymentPage({ params }: { params: Promise<{ 
 
   const { PaymentTransaction } = await import("@/models/PaymentTransaction");
 
-  let initialUtr = payReq.userProvidedUtr || null;
-  let initialDate: string | null = null;
-  
+  const sIds = (payReq.splitIds && payReq.splitIds.length > 0) 
+    ? payReq.splitIds 
+    : (payReq.splitId ? [payReq.splitId] : []);
+
   if (payReq.splitIds && payReq.splitIds.length > 0) {
-    // Consolidated request
     billTitle = "Consolidated Pending Dues";
     const splits = await Split.find({ _id: { $in: payReq.splitIds } });
     if (splits && splits.length > 0) {
       isPaid = isPaid || splits.every(s => s.status === "PAID");
     }
-    
-    if (isPaid) {
-      const tx = await PaymentTransaction.findOne({ splitId: { $in: payReq.splitIds }, status: "VERIFIED" }).sort({ paymentTime: -1 });
-      if (tx) {
-        initialUtr = tx.utr || initialUtr;
-        if (tx.paymentTime) {
-          try {
-            const d = new Date(tx.paymentTime);
-            if (!isNaN(d.getTime())) {
-              initialDate = d.toISOString();
-            }
-          } catch {
-            initialDate = null;
-          }
-        }
-      }
-    }
   } else {
-    // Single split request
     billTitle = payReq.billId?.title || "Payment Request";
     const split = payReq.splitId ? await Split.findById(payReq.splitId) : null;
     isPaid = isPaid || split?.status === "PAID";
-    
-    if (isPaid) {
-      const tx = await PaymentTransaction.findOne({ splitId: split?._id, status: "VERIFIED" }).sort({ paymentTime: -1 });
-      if (tx) {
-        initialUtr = tx.utr || initialUtr;
-        if (tx.paymentTime) {
-          try {
-            const d = new Date(tx.paymentTime);
-            if (!isNaN(d.getTime())) {
-              initialDate = d.toISOString();
-            }
-          } catch {
-            initialDate = null;
-          }
-        }
+  }
+
+  // Also check if any VERIFIED transaction exists for this refCode, split, or paymentRequestId
+  const orConditions: any[] = [{ paymentRequestId: payReq._id }];
+  if (sIds.length > 0) orConditions.push({ splitId: { $in: sIds } });
+  if (payReq.refCode) orConditions.push({ refCode: payReq.refCode });
+  if (payReq.userProvidedUtr) orConditions.push({ utr: payReq.userProvidedUtr });
+
+  const tx = await PaymentTransaction.findOne({
+    $or: orConditions,
+    status: "VERIFIED"
+  }).sort({ paymentTime: -1 });
+
+  if (tx) {
+    isPaid = true;
+  }
+
+  let initialUtr = tx?.utr || payReq.userProvidedUtr || null;
+  let initialDate: string | null = null;
+
+  if (tx?.paymentTime) {
+    try {
+      const d = new Date(tx.paymentTime);
+      if (!isNaN(d.getTime())) {
+        initialDate = d.toISOString();
       }
+    } catch {
+      initialDate = null;
     }
   }
 
-  // Check if expired or cancelled (and not paid)
-  const isExpired = payReq.status === "CANCELLED" || payReq.status === "EXPIRED" || (payReq.expiresAt && new Date() > new Date(payReq.expiresAt));
-  if (!isPaid && isExpired) {
-    return invalidLinkScreen;
+  if (isPaid) {
+    if (payReq.status !== "COMPLETED") {
+      payReq.status = "COMPLETED";
+      await payReq.save();
+    }
+    if (sIds.length > 0) {
+      await Split.updateMany({ _id: { $in: sIds } }, { $set: { status: "PAID" } });
+    }
+  } else {
+    // Keep active so user can complete or verify payment
+    if (payReq.status === "EXPIRED" || !payReq.expiresAt || new Date() > new Date(payReq.expiresAt)) {
+      payReq.status = "ACTIVE";
+      payReq.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await payReq.save();
+    }
   }
 
   let derivedStatus = isPaid ? "PAID" : "ACTIVE";

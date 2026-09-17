@@ -14,7 +14,9 @@ export async function POST(req: NextRequest) {
     await dbConnect();
     Person; Bill; Split;
 
-    const pendingRequests = await PaymentRequest.find({ status: "ACTIVE" }).populate("personId");
+    const pendingRequests = await PaymentRequest.find({
+      status: { $in: ["ACTIVE", "EXPIRED"] }
+    }).populate("personId");
     if (!pendingRequests || pendingRequests.length === 0) {
       return NextResponse.json({ success: true, verifiedCount: 0, message: "No active requests" });
     }
