@@ -19,239 +19,73 @@ import { Button } from "@/components/ui/button";
 interface UPIAppConfig {
   id: string;
   name: string;
+  domain: string;
   pkg?: string;
   scheme?: string;
 }
 
-// Authentic Vector SVG Logos for each UPI App
-function AppBrandLogo({ id }: { id: string }) {
-  switch (id) {
-    case "gpay":
-      return (
-        <svg viewBox="0 0 24 24" className="w-6 h-6 shrink-0">
-          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-        </svg>
-      );
-    case "phonepe":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#5f259f"/>
-          <path fill="#ffffff" d="M34.5 17.5h-5.2c.4-1.2.7-2.5.7-3.8 0-.9-.7-1.7-1.6-1.7h-3.8c-.7 0-1.3.4-1.5 1.1l-.8 3.4h-3.3c-.6 0-1.1.5-1.1 1.1v2.5c0 .6.5 1.1 1.1 1.1h2.3l-2.4 10.4c-.2.8.4 1.6 1.3 1.6h3.4c.7 0 1.3-.5 1.5-1.1l1.7-7.4h2.5c4.6 0 7.8-2.7 7.8-7.2 0-.2 0-.4-.1-.5zm-6.2 5.5h-2.9l1.1-4.7h2c1.8 0 3.1.9 3.1 2.4 0 1.5-1.3 2.3-3.3 2.3z"/>
-          <path fill="#ffffff" d="M30 33c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-        </svg>
-      );
-    case "paytm":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full bg-white shadow-2xs border border-gray-100 p-0.5">
-          <text x="3" y="31" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="16" fill="#002e6e">Pay</text>
-          <text x="29" y="31" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="16" fill="#00b9f5">tm</text>
-        </svg>
-      );
-    case "cred":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#000000"/>
-          <path fill="none" stroke="#ffffff" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" d="M14 15h20v14a10 10 0 0 1-20 0V15zm6 0v14a4 4 0 0 0 8 0V15m-4 14v4"/>
-        </svg>
-      );
-    case "bhim":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#003764"/>
-          <path fill="#00A651" d="M26 10l-12 14h9l-3 14 14-16h-9l3-12z"/>
-          <path fill="#F58220" d="M28 10l-6 7h6l-2 7 8-9h-6l2-5z"/>
-        </svg>
-      );
-    case "amazonpay":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#232f3e"/>
-          <path fill="#ff9900" d="M14 27c4 3.5 11 4.5 17 0 .5-.4 1.2 0 .8.6-5 4-13 4-18.5-.1-.4-.3 0-.8.7-.5z"/>
-          <path fill="#ff9900" d="M31.5 25.5c.6.8 1.8 1.2 2.5 1 .3-.1.4-.4.3-.6-.5-.9-1.5-2.2-2.5-2.1-.2 0-.4.2-.4.4 0 .3.1.9.1 1.3z"/>
-          <text x="14" y="21" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="11" fill="#ffffff">pay</text>
-        </svg>
-      );
-    case "navi":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#00D09C"/>
-          <path fill="#000000" d="M16 33V15h4.5l8 11.5V15H32v18h-4.5l-8-11.5V33H16z"/>
-        </svg>
-      );
-    case "whatsapp":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#25D366"/>
-          <path fill="#ffffff" d="M24 11c-7.2 0-13 5.8-13 13 0 2.4.7 4.7 1.9 6.7L11 37l6.6-1.7c1.9 1.1 4.1 1.7 6.4 1.7 7.2 0 13-5.8 13-13s-5.8-13-13-13zm6.5 18.4c-.3.8-1.6 1.5-2.2 1.6-.6.1-1.3.2-4.3-1-3.6-1.5-5.9-5.1-6.1-5.3-.2-.2-1.5-2-1.5-3.8 0-1.8.9-2.7 1.3-3.1.3-.3.8-.5 1.2-.5.1 0 .3 0 .4.1.4 0 .6.1.8.6.3.8 1 2.5 1.1 2.7.1.2.1.4 0 .6-.1.2-.2.4-.4.6l-.6.7c-.2.2-.4.4-.2.7.5.9 1.4 2.1 2.7 2.9 1.7 1.1 2.8 1.4 3.2 1.6.4.2.6.1.8-.1.3-.3 1.1-1.3 1.4-1.7.3-.4.6-.3.9-.2.4.1 2.3 1.1 2.7 1.3.4.2.7.3.8.5.1.3.1 1.4-.2 2.2z"/>
-        </svg>
-      );
-    case "tataneu":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#3D195B"/>
-          <text x="11" y="30" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="16" fill="#ffffff">neu</text>
-        </svg>
-      );
-    case "jupiter":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#F46A35"/>
-          <path fill="#ffffff" d="M21 16h6v12a4 4 0 0 1-8 0v-2h4v2a1 1 0 0 0 2 0V16z"/>
-          <circle cx="24" cy="12" r="2" fill="#ffffff"/>
-        </svg>
-      );
-    case "fi":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#00C9A7"/>
-          <text x="14" y="31" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="20" fill="#000000">fi</text>
-        </svg>
-      );
-    case "slice":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#7822E6"/>
-          <path fill="#ffffff" d="M16 27l14-14v16a3 3 0 0 1-3 3H16v-5z"/>
-        </svg>
-      );
-    case "mobikwik":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#1A73E8"/>
-          <text x="10" y="30" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="16" fill="#ffffff">MK</text>
-        </svg>
-      );
-    case "freecharge":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#F68220"/>
-          <path fill="#ffffff" d="M18 16h12v4h-8v4h6v4h-6v6h-4V16z"/>
-        </svg>
-      );
-    case "payzapp":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#004c8f"/>
-          <rect x="15" y="15" width="18" height="18" fill="#ed1c24"/>
-          <rect x="18" y="18" width="12" height="12" fill="#ffffff"/>
-          <rect x="21" y="15" width="6" height="18" fill="#004c8f"/>
-          <rect x="15" y="21" width="18" height="6" fill="#004c8f"/>
-        </svg>
-      );
-    case "imobile":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#B02A30"/>
-          <circle cx="24" cy="24" r="11" fill="none" stroke="#F58220" strokeWidth="3"/>
-          <path fill="#ffffff" d="M21 17h6v3h-6zm0 5h6v9h-6z"/>
-        </svg>
-      );
-    case "yono":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#0082c6"/>
-          <circle cx="24" cy="24" r="11" fill="#ffffff"/>
-          <circle cx="24" cy="24" r="5" fill="#0082c6"/>
-          <rect x="22.5" y="24" width="3" height="11" fill="#0082c6"/>
-        </svg>
-      );
-    case "kotak":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#EE1C25"/>
-          <path fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" d="M16 24c0-3.5 3-5 5.5-2.5L24 24l2.5 2.5c2.5 2.5 5.5 1 5.5-2.5s-3-5-5.5-2.5L24 24l-2.5-2.5C19 19 16 20.5 16 24z"/>
-        </svg>
-      );
-    case "axis":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#97124B"/>
-          <path fill="#ffffff" d="M24 13l-10 18h6.5l3.5-7 3.5 7H34L24 13zm0 7.5l2.2 4.5h-4.4L24 20.5z"/>
-        </svg>
-      );
-    case "bob":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#F26522"/>
-          <circle cx="24" cy="24" r="8" fill="none" stroke="#ffffff" strokeWidth="3"/>
-          <path fill="#ffffff" d="M24 10v4m0 20v4m-14-14h4m20 0h4"/>
-        </svg>
-      );
-    case "pnb":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#A20A3A"/>
-          <text x="9" y="30" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="13" fill="#FFCC00">PNB</text>
-        </svg>
-      );
-    case "canara":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#0089CF"/>
-          <polygon points="16,32 24,16 32,32" fill="#FFCC00"/>
-          <polygon points="20,28 24,20 28,28" fill="#0089CF"/>
-        </svg>
-      );
-    case "federal":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#0C2340"/>
-          <text x="11" y="30" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="13" fill="#FFC72C">FED</text>
-        </svg>
-      );
-    case "bajaj":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#0072BC"/>
-          <text x="8" y="30" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="11" fill="#ffffff">BAJAJ</text>
-        </svg>
-      );
-    case "samsung":
-      return (
-        <svg viewBox="0 0 48 48" className="w-6 h-6 shrink-0 rounded-full shadow-2xs">
-          <rect width="48" height="48" rx="24" fill="#1428A0"/>
-          <path fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" d="M17 28c0 3 2 4 4.5 4 4 0 5.5-2.5 5.5-5s-3-3.5-5.5-4.5c-2.5-1-4-2-4-4s2-3.5 4.5-3.5c2 0 4 1 4.5 3"/>
-        </svg>
-      );
-    default:
-      return (
-        <div className="w-6 h-6 rounded-full bg-canvas-soft border border-hairline flex items-center justify-center text-ink font-bold text-[10px] shrink-0 shadow-2xs">
-          UPI
-        </div>
-      );
-  }
-}
-
 const POPULAR_UPI_APPS: UPIAppConfig[] = [
-  { id: "gpay", name: "Google Pay", pkg: "com.google.android.apps.nbu.paisa.user", scheme: "tez://upi/pay" },
-  { id: "phonepe", name: "PhonePe", pkg: "com.phonepe.app", scheme: "phonepe://pay" },
-  { id: "paytm", name: "Paytm", pkg: "net.one97.paytm", scheme: "paytmmp://pay" },
-  { id: "cred", name: "CRED", pkg: "com.dreamplug.androidapp", scheme: "credpay://upi/pay" },
-  { id: "bhim", name: "BHIM (NPCI)", pkg: "in.org.npci.upiapp", scheme: "upi://pay" },
-  { id: "amazonpay", name: "Amazon Pay", pkg: "in.amazon.mShop.android.shopping", scheme: "amazonpay://upi/pay" },
-  { id: "navi", name: "Navi UPI", pkg: "com.naviapp", scheme: "navi://upi/pay" },
-  { id: "tataneu", name: "Tata Neu", pkg: "com.tatadigital.tcp", scheme: "tataneu://upi/pay" },
-  { id: "whatsapp", name: "WhatsApp Pay", pkg: "com.whatsapp", scheme: "whatsapp://pay" },
-  { id: "jupiter", name: "Jupiter Money", pkg: "money.jupiter", scheme: "jupiter://upi/pay" },
-  { id: "fi", name: "Fi Money", pkg: "money.fi.banking", scheme: "fi://upi/pay" },
-  { id: "slice", name: "Slice", pkg: "org.slice.app", scheme: "slice://upi/pay" },
-  { id: "mobikwik", name: "MobiKwik", pkg: "com.mobikwik_new", scheme: "mobikwik://upi/pay" },
-  { id: "freecharge", name: "Freecharge", pkg: "com.freecharge.android", scheme: "freecharge://upi/pay" },
-  { id: "payzapp", name: "PayZapp (HDFC)", pkg: "com.enStage.wibmo.hdfc", scheme: "payzapp://upi/pay" },
-  { id: "imobile", name: "iMobile Pay (ICICI)", pkg: "com.csam.icici.bank.imobile", scheme: "imobile://upi/pay" },
-  { id: "yono", name: "YONO SBI", pkg: "com.sbi.lotusintouch", scheme: "yono://upi/pay" },
-  { id: "kotak", name: "Kotak 811", pkg: "com.msf.kbank.mobile", scheme: "kotak://upi/pay" },
-  { id: "axis", name: "Axis Mobile", pkg: "com.axis.mobile", scheme: "axis://upi/pay" },
-  { id: "bob", name: "bob World (Bank of Baroda)", pkg: "com.bankofbaroda.mconnect", scheme: "bobworld://upi/pay" },
-  { id: "pnb", name: "PNB ONE", pkg: "com.pnb.pnbone", scheme: "pnbone://upi/pay" },
-  { id: "canara", name: "Canara ai1", pkg: "com.canarabank.mobility", scheme: "canaraai1://upi/pay" },
-  { id: "federal", name: "FedMobile (Federal Bank)", pkg: "com.fedmobile", scheme: "fedmobile://upi/pay" },
-  { id: "bajaj", name: "Bajaj Finserv", pkg: "org.altruist.BajajExperia", scheme: "bajajfinserv://upi/pay" },
-  { id: "samsung", name: "Samsung Pay", pkg: "com.samsung.android.spay", scheme: "samsungpay://upi/pay" },
+  // Top 4 Primary Apps
+  { id: "gpay", name: "Google Pay", domain: "google.com", pkg: "com.google.android.apps.nbu.paisa.user", scheme: "tez://upi/pay" },
+  { id: "phonepe", name: "PhonePe", domain: "phonepe.com", pkg: "com.phonepe.app", scheme: "phonepe://pay" },
+  { id: "paytm", name: "Paytm", domain: "paytm.com", pkg: "net.one97.paytm", scheme: "paytmmp://pay" },
+  { id: "cred", name: "CRED", domain: "cred.club", pkg: "com.dreamplug.androidapp", scheme: "credpay://upi/pay" },
+
+  // Leading UPI & Fintech Apps
+  { id: "bhim", name: "BHIM (NPCI)", domain: "bhimupi.org.in", pkg: "in.org.npci.upiapp", scheme: "upi://pay" },
+  { id: "amazonpay", name: "Amazon Pay", domain: "amazon.in", pkg: "in.amazon.mShop.android.shopping", scheme: "amazonpay://upi/pay" },
+  { id: "navi", name: "Navi UPI", domain: "navi.com", pkg: "com.naviapp", scheme: "navi://upi/pay" },
+  { id: "tataneu", name: "Tata Neu", domain: "tatadigital.com", pkg: "com.tatadigital.tcp", scheme: "tataneu://upi/pay" },
+  { id: "whatsapp", name: "WhatsApp Pay", domain: "whatsapp.com", pkg: "com.whatsapp", scheme: "whatsapp://pay" },
+  { id: "supermoney", name: "Super.money (Flipkart)", domain: "super.money", pkg: "money.super", scheme: "supermoney://upi/pay" },
+  { id: "jupiter", name: "Jupiter Money", domain: "jupiter.money", pkg: "money.jupiter", scheme: "jupiter://upi/pay" },
+  { id: "fi", name: "Fi Money", domain: "fi.money", pkg: "money.fi.banking", scheme: "fi://upi/pay" },
+  { id: "kiwi", name: "Kiwi UPI", domain: "gokiwi.in", pkg: "in.gokiwi.app", scheme: "kiwi://upi/pay" },
+  { id: "mobikwik", name: "MobiKwik", domain: "www.mobikwik.com", pkg: "com.mobikwik_new", scheme: "mobikwik://upi/pay" },
+  { id: "freecharge", name: "Freecharge", domain: "freecharge.in", pkg: "com.freecharge.android", scheme: "freecharge://upi/pay" },
+  { id: "bajaj", name: "Bajaj Finserv", domain: "bajajfinserv.in", pkg: "org.altruist.BajajExperia", scheme: "bajajfinserv://upi/pay" },
+  { id: "samsung", name: "Samsung Pay", domain: "samsung.com", pkg: "com.samsung.android.spay", scheme: "samsungpay://upi/pay" },
+  { id: "zomato", name: "Zomato UPI", domain: "zomato.com", pkg: "com.application.zomato", scheme: "zomato://upi/pay" },
+  { id: "swiggy", name: "Swiggy UPI", domain: "swiggy.com", pkg: "in.swiggy.android", scheme: "swiggy://upi/pay" },
+
+  // Bank UPI Apps
+  { id: "payzapp", name: "PayZapp (HDFC)", domain: "hdfcbank.com", pkg: "com.enStage.wibmo.hdfc", scheme: "payzapp://upi/pay" },
+  { id: "imobile", name: "iMobile Pay (ICICI)", domain: "icicibank.com", pkg: "com.csam.icici.bank.imobile", scheme: "imobile://upi/pay" },
+  { id: "yono", name: "YONO SBI", domain: "onlinesbi.sbi", pkg: "com.sbi.lotusintouch", scheme: "yono://upi/pay" },
+  { id: "kotak", name: "Kotak 811", domain: "kotak.com", pkg: "com.msf.kbank.mobile", scheme: "kotak://upi/pay" },
+  { id: "axis", name: "Axis Mobile", domain: "axisbank.com", pkg: "com.axis.mobile", scheme: "axis://upi/pay" },
+  { id: "bob", name: "bob World (Bank of Baroda)", domain: "bankofbaroda.in", pkg: "com.bankofbaroda.mconnect", scheme: "bobworld://upi/pay" },
+  { id: "canara", name: "Canara ai1", domain: "canarabank.com", pkg: "com.canarabank.mobility", scheme: "canaraai1://upi/pay" },
+  { id: "indusind", name: "IndusInd Bank", domain: "indusind.com", pkg: "com.mgs.indusmobile", scheme: "indus://upi/pay" },
+  { id: "idfc", name: "IDFC FIRST Bank", domain: "idfcfirstbank.com", pkg: "com.idfcfirstbank.optimus", scheme: "idfc://upi/pay" },
+  { id: "yesbank", name: "Yes Bank", domain: "yesbank.in", pkg: "com.yesbank", scheme: "yesbank://upi/pay" },
+  { id: "airtel", name: "Airtel Payments Bank", domain: "airtel.in", pkg: "com.myairtelapp", scheme: "airtel://upi/pay" },
+  { id: "jiopay", name: "JioPay", domain: "jio.com", pkg: "com.jio.media.jiobeats", scheme: "jiopay://upi/pay" },
+  { id: "rbl", name: "RBL MoBank", domain: "rblbank.com", pkg: "com.rblbank.mobank", scheme: "rbl://upi/pay" },
 ];
+
+function AppOfficialFavicon({ app }: { app: UPIAppConfig }) {
+  const [imgError, setImgError] = useState(false);
+
+  return (
+    <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white shadow-2xs border border-hairline/60">
+      {!imgError ? (
+        <img
+          src={`/logos/${app.id}.png`}
+          alt={app.name}
+          onError={() => setImgError(true)}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <img
+          src={`https://www.google.com/s2/favicons?domain=${app.domain}&sz=128`}
+          alt={app.name}
+          className="w-full h-full object-cover"
+        />
+      )}
+    </div>
+  );
+}
 
 export default function LivePaymentUI({ token, refCode, billTitle, personName, amountPaise, initialStatus, initialUtr, initialDate, upiId }: any) {
   const [status, setStatus] = useState(initialStatus);
@@ -509,7 +343,10 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   const filteredApps = useMemo(() => {
     const q = appSearch.trim().toLowerCase();
     if (!q) return POPULAR_UPI_APPS;
-    return POPULAR_UPI_APPS.filter(a => a.name.toLowerCase().includes(q));
+    return POPULAR_UPI_APPS.filter(a => 
+      a.name.toLowerCase().includes(q) || 
+      a.domain.toLowerCase().includes(q)
+    );
   }, [appSearch]);
 
   return (
@@ -688,7 +525,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                   </h3>
                   <p className="text-xs text-ink-mute mt-0.5">
                     {modalView === "main" && "Select your preferred app"}
-                    {modalView === "other_apps" && "Search 25+ verified UPI apps"}
+                    {modalView === "other_apps" && "Search 30+ official UPI apps"}
                     {modalView === "manual" && "For NetBanking, IMPS, or bank apps"}
                   </p>
                 </div>
@@ -716,7 +553,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
             {/* ================= VIEW 1: MAIN MINIMAL VIEW ================= */}
             {modalView === "main" && (
               <div className="space-y-3.5">
-                {/* 4 Primary Top Apps with Original Logos */}
+                {/* 4 Primary Top Apps with Real Official Logos */}
                 <div className="grid grid-cols-2 gap-2">
                   {POPULAR_UPI_APPS.slice(0, 4).map((app) => (
                     <button
@@ -725,7 +562,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                       onClick={() => triggerAppLaunch(app)}
                       className="flex items-center gap-2.5 py-3 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 cursor-pointer text-left"
                     >
-                      <AppBrandLogo id={app.id} />
+                      <AppOfficialFavicon app={app} />
                       <span className="truncate">{app.name}</span>
                     </button>
                   ))}
@@ -760,7 +597,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
               </div>
             )}
 
-            {/* ================= VIEW 2: SEARCHABLE LIST OF ALL 25+ UPI APPS ================= */}
+            {/* ================= VIEW 2: SEARCHABLE LIST OF ALL 30+ UPI APPS ================= */}
             {modalView === "other_apps" && (
               <div className="space-y-3">
                 {/* Search Bar */}
@@ -768,7 +605,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                   <Search className="w-4 h-4 text-ink-mute absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
-                    placeholder="Search 25+ UPI apps (e.g. BHIM, Navi, HDFC...)"
+                    placeholder="Search 30+ UPI apps (e.g. BHIM, Navi, HDFC...)"
                     value={appSearch}
                     onChange={(e) => setAppSearch(e.target.value)}
                     autoFocus
@@ -785,7 +622,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                   )}
                 </div>
 
-                {/* Filtered Apps Grid with Original Logos */}
+                {/* Filtered Apps Grid with Real Official Brand Favicons */}
                 <div className="grid grid-cols-2 gap-2 max-h-[46vh] overflow-y-auto pr-0.5">
                   {filteredApps.map((app) => (
                     <button
@@ -794,7 +631,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                       onClick={() => triggerAppLaunch(app)}
                       className="flex items-center gap-2.5 py-2.5 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 text-left cursor-pointer"
                     >
-                      <AppBrandLogo id={app.id} />
+                      <AppOfficialFavicon app={app} />
                       <span className="truncate">{app.name}</span>
                     </button>
                   ))}
