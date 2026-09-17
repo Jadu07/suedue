@@ -353,6 +353,13 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
 
   return (
     <>
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-ink text-canvas text-xs font-bold py-2 px-4 rounded-full shadow-2xl z-50 animate-in fade-in duration-150 whitespace-nowrap">
+          {toastMessage}
+        </div>
+      )}
+
       <div className="w-full max-w-[448px] bg-canvas-soft border border-hairline rounded-xl shadow-lg p-xl md:p-xxl text-center">
         <div className="mb-xl">
           <p className="text-ink-mute micro uppercase tracking-wider mb-xs">Payment Request</p>
@@ -379,25 +386,64 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
               />
             </div>
             
-            <button
-              type="button"
+            {/* Direct Active Link */}
+            <a
+              href={directUpiLink}
               onClick={() => {
-                setModalView("main");
-                setAppSearch("");
-                setShowModal(true);
+                if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
+                  navigator.clipboard.writeText(cleanToken).catch(() => {});
+                  setToastMessage(`Note "${cleanToken}" copied! Paste in remarks`);
+                  setTimeout(() => setToastMessage(null), 3500);
+                }
               }}
-              className="bg-white text-primary px-lg py-sm rounded-full font-bold mb-md hover:bg-gray-100 active:scale-95 transition shadow-sm cursor-pointer"
+              className="w-full max-w-xs flex items-center justify-center gap-2 bg-white text-primary px-lg py-3 rounded-full font-bold text-sm hover:bg-gray-100 active:scale-95 transition shadow-md cursor-pointer mb-md text-center"
             >
-              Pay with UPI App
-            </button>
+              <Smartphone className="w-4 h-4" />
+              <span>Pay with UPI App</span>
+            </a>
 
-            <p className="micro opacity-80 text-center mb-xs">Scan or click to open any UPI app</p>
-            
-            {cleanToken && (
-              <div className="inline-flex items-center gap-1 bg-white/10 px-sm py-0.5 rounded text-[11px] font-mono tracking-wider mb-sm opacity-90">
-                <span>Note:</span> <span className="font-bold">{cleanToken}</span>
+            <p className="micro opacity-80 text-center mb-md">Scan QR code or click button above to open your UPI app</p>
+
+            {/* Instruction Card for Amount & Note */}
+            <div className="w-full bg-white/10 border border-white/20 rounded-xl p-3 mb-md text-left text-xs text-white space-y-2">
+              <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-wider text-white/90">
+                <Info className="w-3.5 h-3.5" />
+                <span>Payment Instructions</span>
               </div>
-            )}
+              
+              <div className="flex items-center justify-between bg-black/15 border border-white/10 px-2.5 py-1.5 rounded-lg">
+                <span className="text-white/80 font-medium">Exact Amount:</span>
+                <span className="font-mono font-bold text-sm text-white">₹{amountRupees}</span>
+              </div>
+
+              <div className="flex items-center justify-between bg-black/15 border border-white/10 px-2.5 py-1.5 rounded-lg">
+                <div className="min-w-0">
+                  <span className="text-white/80 font-medium block text-[11px]">Note / Remarks (Required):</span>
+                  <span className="font-mono font-bold text-sm text-white">{cleanToken}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyNote}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded bg-white text-primary hover:bg-white/90 active:scale-95 transition shrink-0 cursor-pointer shadow-xs"
+                >
+                  {copiedNote ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-600" />
+                      <span className="text-emerald-700">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Copy Note</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <p className="text-[11px] text-white/80 leading-snug pt-0.5">
+                ⚠️ Ensure amount is <strong className="text-white font-mono">₹{amountRupees}</strong> and paste Note <strong className="text-white font-mono">{cleanToken}</strong> in remarks for instant automatic confirmation!
+              </p>
+            </div>
 
             <div className="flex items-center justify-center gap-1.5 mt-sm text-xs opacity-70">
               {timeLeft > 0 ? (
@@ -545,8 +591,8 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
         <p className="micro text-ink-faint mt-md italic">Powered by suedue</p>
       </div>
 
-      {/* ===================== CHOOSE UPI APP POPUP MODAL ===================== */}
-      {showModal && (
+      {/* ===================== CHOOSE UPI APP POPUP MODAL (CURRENTLY HIDDEN) ===================== */}
+      {false && showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-in fade-in duration-200">
           <div className="bg-canvas border border-hairline rounded-t-2xl sm:rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto text-left animate-in slide-in-from-bottom-6 duration-200 relative">
             
