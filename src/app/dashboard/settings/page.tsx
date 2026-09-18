@@ -1,9 +1,14 @@
 import dbConnect from "@/lib/db";
 import { User } from "@/models/User";
+import { Bill } from "@/models/Bill";
+import { Split } from "@/models/Split";
+import { PaymentTransaction } from "@/models/PaymentTransaction";
+import { PaymentRequest } from "@/models/PaymentRequest";
 import UserAvatar from "@/components/UserAvatar";
 import { Shield, MessageSquare, Cpu, CreditCard, CheckCircle2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
+import UnsettledBillsManager, { UnsettledBillItem } from "./UnsettledBillsManager";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +21,36 @@ export default async function SettingsPage() {
   const openwaUrl = process.env.OPENWA_URL || "https://openwa-0gjr.onrender.com";
   const pythonUrl = process.env.PYTHON_VERIFIER_URL || "http://127.0.0.1:8000";
   const upiId = process.env.NEXT_PUBLIC_UPI_ID || "yashrajchouhan@fam";
+
+  // Query all unsettled bills with linked transaction statistics
+  const unsettledBillsRaw = await Bill.find({ status: { $ne: "PAID" } }).sort({ createdAt: -1 }).lean();
+
+  const serializedUnsettledBills: UnsettledBillItem[] = await Promise.all(
+    unsettledBillsRaw.map(async (b: any) => {
+      const splits = await Split.find({ billId: b._id }).lean();
+      const splitIds = splits.map((s) => s._id);
+      const txs = await PaymentTransaction.find({
+        $or: [{ billId: b._id }, { splitId: { $in: splitIds } }]
+      }).lean();
+      const txAmountPaise = txs.reduce((sum: number, t: any) => sum + (t.amountPaise || 0), 0);
+      const reqCount = await PaymentRequest.countDocuments({
+        $or: [{ billId: b._id }, { splitId: { $in: splitIds } }, { splitIds: { $in: splitIds } }]
+      });
+
+      return {
+        _id: b._id.toString(),
+        title: b.title,
+        description: b.description || "",
+        date: b.date ? b.date.toISOString() : b.createdAt.toISOString(),
+        totalAmountPaise: b.totalAmountPaise,
+        status: b.status,
+        splitsCount: splits.length,
+        transactionsCount: txs.length,
+        transactionsAmountPaise: txAmountPaise,
+        requestsCount: reqCount
+      };
+    })
+  );
 
   return (
     <div className="p-md md:p-huge max-w-4xl mx-auto space-y-lg">
@@ -152,6 +187,9 @@ export default async function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Danger Zone: Unsettled Bills Management */}
+      <UnsettledBillsManager initialBills={serializedUnsettledBills} />
 
       {/* Mobile Sign Out Action */}
       <div className="md:hidden pt-1">

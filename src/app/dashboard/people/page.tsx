@@ -44,12 +44,19 @@ export default async function PeoplePage() {
       stat.paidBillsCount += 1;
     } else {
       const paid = splitPaidMap.get(split._id.toString()) || 0;
-      const remaining = Math.max(0, split.originalAmountPaise - paid);
-      if (remaining > 0) {
-        stat.pendingPaise += remaining;
+      if (split.originalAmountPaise < 0) {
+        // Negative split: acts as a credit/deduction against member dues
+        const netDeduction = split.originalAmountPaise + paid;
+        stat.pendingPaise += netDeduction; // adds negative = deducts from dues
         stat.unpaidBillsCount += 1;
       } else {
-        stat.paidBillsCount += 1;
+        const remaining = Math.max(0, split.originalAmountPaise - paid);
+        if (remaining > 0) {
+          stat.pendingPaise += remaining;
+          stat.unpaidBillsCount += 1;
+        } else {
+          stat.paidBillsCount += 1;
+        }
       }
     }
   }

@@ -42,15 +42,18 @@ export async function POST(req: NextRequest) {
       const totalPaid = existingPayments.reduce((acc, p) => acc + p.amountPaise, 0);
       const remainingPaise = split.originalAmountPaise - totalPaid;
       
-      if (remainingPaise > 0) {
+      if (remainingPaise !== 0) {
         totalRemainingPaise += remainingPaise;
-        splitDetails.push(`${split.billId.title}: ${formatMoney(remainingPaise)}`);
+        const lineText = remainingPaise < 0 
+          ? `${split.billId?.title || "Credit"}: -${formatMoney(Math.abs(remainingPaise))} (Credit)`
+          : `${split.billId?.title || "Bill"}: ${formatMoney(remainingPaise)}`;
+        splitDetails.push(lineText);
         finalSplitIds.push(split._id);
       }
     }
 
     if (totalRemainingPaise <= 0) {
-      return NextResponse.json({ error: "Selected splits are already paid." }, { status: 400 });
+      return NextResponse.json({ error: "No pending dues for selected splits (net balance is zero or credit)." }, { status: 400 });
     }
 
     const rawToken = crypto.randomBytes(32).toString("hex");

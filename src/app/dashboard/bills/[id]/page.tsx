@@ -6,7 +6,7 @@ import dbConnect from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Pencil, CheckCircle2, Clock, XCircle, FileText } from "lucide-react";
+import { ChevronLeft, Pencil, CheckCircle2, Clock, XCircle, FileText, Trash2 } from "lucide-react";
 import BillSplitRow from "./BillSplitRow";
 
 export default async function BillViewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,9 +26,10 @@ export default async function BillViewPage({ params }: { params: Promise<{ id: s
 
   const totalAmountPaise = bill.totalAmountPaise || 0;
   const totalPaidPaise = payments.reduce((sum: number, p: any) => sum + (p.amountPaise || 0), 0);
-  const remainingPaise = Math.max(0, totalAmountPaise - totalPaidPaise);
+  const remainingPaise = totalAmountPaise <= 0 ? 0 : Math.max(0, totalAmountPaise - totalPaidPaise);
 
   const settledSplitsCount = splits.filter((s: any) => {
+    if (s.originalAmountPaise <= 0) return true;
     const sPayments = payments.filter((p: any) => p.splitId.toString() === s._id.toString());
     const sPaid = sPayments.reduce((sum: number, p: any) => sum + (p.amountPaise || 0), 0);
     return sPaid >= s.originalAmountPaise;
@@ -39,7 +40,7 @@ export default async function BillViewPage({ params }: { params: Promise<{ id: s
     ? dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
     : bill.date ? String(bill.date).split("T")[0] : "—";
 
-  const isPaid = bill.status === "PAID" || remainingPaise === 0;
+  const isPaid = bill.status === "PAID" || (totalAmountPaise <= 0 && settledSplitsCount === splits.length) || (totalAmountPaise > 0 && remainingPaise === 0);
   const isPartial = bill.status === "PARTIALLY_PAID" || (totalPaidPaise > 0 && remainingPaise > 0);
 
   return (
@@ -109,6 +110,17 @@ export default async function BillViewPage({ params }: { params: Promise<{ id: s
                 <span>Edit Bill</span>
               </button>
             </Link>
+            {!isPaid && (
+              <Link href="/dashboard/settings">
+                <button 
+                  title="Delete this unsettled bill with transactions from Settings"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-canvas hover:bg-red-50 border border-hairline hover:border-red-200 active:scale-95 rounded-xl text-xs font-bold text-red-600 transition shadow-2xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                  <span>Delete Bill</span>
+                </button>
+              </Link>
+            )}
           </div>
         </div>
 

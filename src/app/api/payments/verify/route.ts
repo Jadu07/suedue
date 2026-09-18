@@ -94,9 +94,14 @@ export async function POST(req: NextRequest) {
           await split.save({ session });
           
           const allSplits = await Split.find({ billId: split.billId }).session(session);
-          const allPaid = allSplits.every(s => s.status === "PAID");
+          const allPaid = allSplits.every(s => s.status === "PAID" || s.originalAmountPaise <= 0);
           
           if (allPaid) {
+            await Split.updateMany(
+              { billId: split.billId, originalAmountPaise: { $lte: 0 }, status: { $ne: "PAID" } },
+              { $set: { status: "PAID" } }
+            ).session(session);
+
             const bill = await Bill.findById(split.billId).session(session);
             if (bill) {
               bill.status = "PAID";

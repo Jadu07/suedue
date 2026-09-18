@@ -14,8 +14,8 @@ export default function NewBillPage() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [people, setPeople] = useState<any[]>([]);
   
-  // Splits: array of { personId, amountRupees }
-  const [splits, setSplits] = useState<{ personId: string; amountRupees: string }[]>([]);
+  // Splits: array of { personId, amountRupees, isDeduction }
+  const [splits, setSplits] = useState<{ personId: string; amountRupees: string; isDeduction?: boolean }[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -27,19 +27,36 @@ export default function NewBillPage() {
         setPeople(pList);
         // Start with one empty split by default
         if (splits.length === 0 && pList.length > 0) {
-          setSplits([{ personId: "", amountRupees: "" }]);
+          setSplits([{ personId: "", amountRupees: "", isDeduction: false }]);
         }
       })
       .catch(console.error);
   }, []);
 
   const addSplit = () => {
-    setSplits([...splits, { personId: "", amountRupees: "" }]);
+    setSplits([...splits, { personId: "", amountRupees: "", isDeduction: false }]);
   };
 
-  const updateSplit = (index: number, field: string, value: string) => {
+  const updateSplit = (index: number, field: string, value: any) => {
     const newSplits = [...splits];
-    newSplits[index] = { ...newSplits[index], [field]: value };
+    if (field === "amountRupees") {
+      // If user typed negative sign or negative number, auto-toggle deduction
+      const rawStr = String(value);
+      if (rawStr.startsWith("-")) {
+        const cleaned = rawStr.replace(/^-/, "");
+        newSplits[index] = { ...newSplits[index], amountRupees: cleaned, isDeduction: true };
+      } else {
+        newSplits[index] = { ...newSplits[index], [field]: value };
+      }
+    } else {
+      newSplits[index] = { ...newSplits[index], [field]: value };
+    }
+    setSplits(newSplits);
+  };
+
+  const toggleDeduction = (index: number) => {
+    const newSplits = [...splits];
+    newSplits[index] = { ...newSplits[index], isDeduction: !newSplits[index].isDeduction };
     setSplits(newSplits);
   };
 
@@ -47,11 +64,20 @@ export default function NewBillPage() {
     setSplits(splits.filter((_, i) => i !== index));
   };
 
-  // Calculate live total
-  const liveTotalPaise = splits.reduce((acc, s) => {
-    const val = parseFloat(s.amountRupees) || 0;
+  // Calculate live positive, negative, and net totals
+  const positiveTotalPaise = splits.reduce((acc, s) => {
+    if (s.isDeduction) return acc;
+    const val = Math.abs(parseFloat(s.amountRupees) || 0);
     return acc + toPaise(val);
   }, 0);
+
+  const negativeTotalPaise = splits.reduce((acc, s) => {
+    if (!s.isDeduction) return acc;
+    const val = Math.abs(parseFloat(s.amountRupees) || 0);
+    return acc + toPaise(val);
+  }, 0);
+
+  const liveTotalPaise = positiveTotalPaise - negativeTotalPaise;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,9 +86,14 @@ export default function NewBillPage() {
       return;
     }
 
-    const invalidSplit = splits.some(s => !s.personId || !(parseFloat(s.amountRupees) > 0));
+    const invalidSplit = splits.some(s => !s.personId || !(Math.abs(parseFloat(s.amountRupees)) > 0));
     if (invalidSplit) {
-      alert("Please select a person and enter a valid amount for all splits.");
+      alert("Please select a person and enter a valid non-zero amount for all splits.");
+      return;
+    }
+
+    if (liveTotalPaise === 0) {
+      alert("Total bill amount cannot be zero. Adjust charges or deductions.");
       return;
     }
 
@@ -70,7 +101,9 @@ export default function NewBillPage() {
     try {
       let totalAmountPaise = 0;
       const parsedSplits = splits.map(s => {
-        const amtPaise = toPaise(parseFloat(s.amountRupees) || 0);
+        const rawAmt = Math.abs(parseFloat(s.amountRupees) || 0);
+        const signedAmt = s.isDeduction ? -rawAmt : rawAmt;
+        const amtPaise = toPaise(signedAmt);
         totalAmountPaise += amtPaise;
         return {
           personId: s.personId,
@@ -90,13 +123,16 @@ export default function NewBillPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to create bill");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to create bill");
+      }
 
       router.push("/dashboard");
       router.refresh();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Error creating bill");
+      alert(err.message || "Error creating bill");
     } finally {
       setLoading(false);
     }
@@ -228,17 +264,34 @@ export default function NewBillPage() {
                     </select>
                   </div>
 
-                  {/* Amount Input & Perfectly Aligned Remove Button */}
-                  <div className="flex items-center gap-sm">
-                    <div className="relative w-full sm:w-36">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-ink-mute">₹</span>
+                  {/* Amount Input, Deduction Toggle & Remove Button */}
+                  <div className="flex items-center gap-xs sm:gap-sm flex-wrap sm:flex-nowrap">
+                    {/* Toggle Charge vs Deduct */}
+                    <button
+                      type="button"
+                      onClick={() => toggleDeduction(idx)}
+                      className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition flex items-center gap-1 shrink-0 ${
+                        split.isDeduction
+                          ? "bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200"
+                          : "bg-canvas text-ink border border-hairline hover:bg-canvas-soft"
+                      }`}
+                      title={split.isDeduction ? "Switched to Deduction (-). Click to change to Charge (+)" : "Switched to Charge (+). Click to change to Deduction (-)"}
+                    >
+                      <span>{split.isDeduction ? "− Deduct" : "+ Charge"}</span>
+                    </button>
+
+                    <div className="relative flex-1 sm:w-36 sm:flex-initial">
+                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${split.isDeduction ? "text-amber-700" : "text-ink-mute"}`}>
+                        {split.isDeduction ? "−₹" : "₹"}
+                      </span>
                       <input
                         type="number"
                         step="0.01"
-                        min="0.01"
                         required
                         placeholder="0.00"
-                        className="w-full bg-canvas text-ink border border-hairline rounded-xl pl-7 pr-md py-2 text-xs font-mono font-bold focus:outline-none focus:border-ink transition"
+                        className={`w-full bg-canvas text-ink border rounded-xl pl-7 pr-md py-2 text-xs font-mono font-bold focus:outline-none transition ${
+                          split.isDeduction ? "border-amber-300 focus:border-amber-500 bg-amber-50/30" : "border-hairline focus:border-ink"
+                        }`}
                         value={split.amountRupees}
                         onChange={(e) => updateSplit(idx, "amountRupees", e.target.value)}
                       />
@@ -266,16 +319,56 @@ export default function NewBillPage() {
             )}
           </div>
 
-          {/* Live Total Calculation Banner */}
-          <div className="p-md bg-canvas rounded-xl border border-hairline flex justify-between items-center mt-md">
-            <div>
-              <span className="text-[11px] text-ink-mute uppercase tracking-wider font-bold">Total Bill Amount:</span>
-              <p className="text-xs text-ink-faint">Sum of all individual splits</p>
+          {/* Live Total Calculation Banner with Deductions */}
+          {negativeTotalPaise > 0 ? (
+            <div className="p-md bg-canvas rounded-xl border border-hairline mt-md space-y-2 shadow-2xs">
+              <div className="flex justify-between items-center text-xs pb-2 border-b border-hairline/80">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-ink-mute font-medium">Charges:</span>
+                  <span className="font-bold text-ink">{formatMoney(positiveTotalPaise)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-amber-700 font-medium">Deductions:</span>
+                  <span className="font-bold text-amber-700">-{formatMoney(negativeTotalPaise)}</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center pt-0.5">
+                <div>
+                  <span className="text-[11px] text-ink-mute uppercase tracking-wider font-bold">Net Bill Amount:</span>
+                  <p className="text-xs text-ink-faint">
+                    {liveTotalPaise < 0 ? "Negative bill (credits/refunds to members)" : "Total amount after deducting -ve"}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className={`text-xl font-black ${liveTotalPaise < 0 ? "text-amber-600" : "text-ink"}`}>
+                    {formatMoney(liveTotalPaise)}
+                  </span>
+                  {liveTotalPaise < 0 && (
+                    <span className="block text-[10px] font-bold text-amber-600 uppercase tracking-wider">
+                      Negative Bill
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-            <span className="text-xl font-black text-ink">
-              {formatMoney(liveTotalPaise)}
-            </span>
-          </div>
+          ) : (
+            <div className="p-md bg-canvas rounded-xl border border-hairline flex justify-between items-center mt-md">
+              <div>
+                <span className="text-[11px] text-ink-mute uppercase tracking-wider font-bold">Total Bill Amount:</span>
+                <p className="text-xs text-ink-faint">Sum of all individual splits</p>
+              </div>
+              <div className="text-right">
+                <span className={`text-xl font-black ${liveTotalPaise < 0 ? "text-amber-600" : "text-ink"}`}>
+                  {formatMoney(liveTotalPaise)}
+                </span>
+                {liveTotalPaise < 0 && (
+                  <span className="block text-[10px] font-bold text-amber-600 uppercase tracking-wider">
+                    Negative Bill
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Bottom Actions */}

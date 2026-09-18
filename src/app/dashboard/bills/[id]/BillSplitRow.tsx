@@ -74,7 +74,8 @@ export default function BillSplitRow({ split, person, totalPaidPaise, remainingP
     }
   };
 
-  const isFullySettled = remainingPaise <= 0;
+  const isDeduction = split.originalAmountPaise < 0;
+  const isFullySettled = isDeduction || remainingPaise <= 0;
 
   return (
     <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-canvas-soft/60 transition-colors">
@@ -83,7 +84,10 @@ export default function BillSplitRow({ split, person, totalPaidPaise, remainingP
         <div className="min-w-0">
           <h4 className="font-bold text-ink text-sm truncate">{person.name}</h4>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-0.5 text-xs text-ink-mute">
-            <span>Split: <strong className="text-ink font-semibold">{formatMoney(split.originalAmountPaise)}</strong></span>
+            <span>
+              Split: <strong className={isDeduction ? "text-amber-700 font-bold" : "text-ink font-semibold"}>{formatMoney(split.originalAmountPaise)}</strong>
+              {isDeduction && <span className="ml-1 text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">Deduction</span>}
+            </span>
             {totalPaidPaise > 0 && (
               <span>Paid: <strong className="text-emerald-600 font-semibold">{formatMoney(totalPaidPaise)}</strong></span>
             )}
@@ -117,8 +121,8 @@ export default function BillSplitRow({ split, person, totalPaidPaise, remainingP
           </>
         ) : (
           <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-canvas-soft text-ink border border-hairline">
-            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-            <span>Settled</span>
+            <CheckCircle2 className={`w-3 h-3 ${isDeduction ? "text-amber-600" : "text-emerald-600"}`} />
+            <span>{isDeduction ? "Credit / Deducted" : "Settled"}</span>
           </span>
         )}
       </div>

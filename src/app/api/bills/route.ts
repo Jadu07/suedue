@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
     const { title, description, date, totalAmountPaise, splits } = data;
 
-    // Create Bill
+    // Create Bill (supports positive or negative bills)
     const bill = await Bill.create([{
       title,
       description,
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     const billId = bill[0]._id;
 
-    // Create Splits
+    // Create Splits (preserving exact signed originalAmountPaise)
     const splitDocs = splits.map((s: any) => ({
       billId,
       personId: s.personId,

@@ -67,7 +67,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       const totalPaid = splitPaidMap.get(split._id.toString()) || 0;
       const remainingPaise = split.originalAmountPaise - totalPaid;
       
-      if (remainingPaise > 0) {
+      if (remainingPaise !== 0) {
         pendingSplitsData.push({
           splitId: split._id.toString(),
           billTitle: split.billId ? split.billId.title : "Bill",

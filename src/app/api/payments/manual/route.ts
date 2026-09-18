@@ -67,13 +67,17 @@ export async function POST(req: NextRequest) {
 
     // Check if bill is fully paid
     const allSplits = await Split.find({ billId }).session(session);
-    const allPaid = allSplits.every(s => s.status === "PAID");
-    const anyPartiallyPaid = allSplits.some(s => s.status === "PARTIALLY_PAID" || s.status === "PAID");
+    const allPaid = allSplits.every(s => s.status === "PAID" || s.originalAmountPaise <= 0);
+    const anyPartiallyPaid = allSplits.some(s => s.status === "PARTIALLY_PAID" || (s.status === "PAID" && s.originalAmountPaise > 0));
 
     const bill = await Bill.findById(billId).session(session);
     if (bill) {
       if (allPaid) {
         bill.status = "PAID";
+        await Split.updateMany(
+          { billId, originalAmountPaise: { $lte: 0 }, status: { $ne: "PAID" } },
+          { $set: { status: "PAID" } }
+        ).session(session);
       } else if (anyPartiallyPaid) {
         bill.status = "PARTIALLY_PAID";
       }
