@@ -2,6 +2,7 @@ import { Bill } from "@/models/Bill";
 import { Split } from "@/models/Split";
 import { Person } from "@/models/Person";
 import { PaymentTransaction } from "@/models/PaymentTransaction";
+import { AppSetting } from "@/models/AppSetting";
 import dbConnect from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import Link from "next/link";
@@ -19,10 +20,12 @@ export default async function BillViewPage({ params }: { params: Promise<{ id: s
   const bill = await Bill.findById(id).lean();
   if (!bill) notFound();
 
-  const [splits, payments] = await Promise.all([
+  const [splits, payments, yearSetting] = await Promise.all([
     Split.find({ billId: bill._id }).populate("personId").lean(),
     PaymentTransaction.find({ billId: bill._id, status: "VERIFIED" }).lean(),
+    AppSetting.findOne({ key: "includeYearInWhatsApp" }).lean(),
   ]);
+  const includeYear = Boolean(yearSetting?.value);
 
   const totalAmountPaise = bill.totalAmountPaise || 0;
   const totalPaidPaise = payments.reduce((sum: number, p: any) => sum + (p.amountPaise || 0), 0);
@@ -180,6 +183,7 @@ export default async function BillViewPage({ params }: { params: Promise<{ id: s
                 person={JSON.parse(JSON.stringify(split.personId))}
                 totalPaidPaise={splitPaidPaise}
                 remainingPaise={splitRemainingPaise}
+                includeYearInWhatsApp={includeYear}
               />
             );
           })}

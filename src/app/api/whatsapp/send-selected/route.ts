@@ -9,6 +9,8 @@ import { PaymentTransaction } from "@/models/PaymentTransaction";
 import { toRupees, formatMoney } from "@/lib/money";
 import crypto from "crypto";
 import axios from "axios";
+import { formatSplitTitleWithDate } from "@/lib/whatsappDate";
+import { getIncludeYearPreference } from "@/lib/whatsappSettings";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,6 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No pending dues found for selected splits." }, { status: 400 });
     }
 
+    const includeYear = await getIncludeYearPreference();
     let totalRemainingPaise = 0;
     const splitDetails = [];
     const finalSplitIds = [];
@@ -45,17 +48,11 @@ export async function POST(req: NextRequest) {
       if (remainingPaise !== 0) {
         totalRemainingPaise += remainingPaise;
         const bDate = split.billId?.date ? new Date(split.billId.date) : (split.createdAt ? new Date(split.createdAt) : null);
-        const dateStr = bDate && !isNaN(bDate.getTime())
-          ? bDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-          : "";
-
-        const title = (split.billId?.title || "Bill").trim();
-        const hasDateAlready = dateStr && title.toLowerCase().includes(dateStr.toLowerCase());
-        const dateSuffix = (dateStr && !hasDateAlready) ? ` ${dateStr}` : "";
+        const titleWithDate = formatSplitTitleWithDate(split.billId?.title || "Bill", bDate, includeYear);
 
         const lineText = remainingPaise < 0 
-          ? `• ${title}${dateSuffix}: -${formatMoney(Math.abs(remainingPaise))} (Credit)`
-          : `• ${title}${dateSuffix}: ${formatMoney(remainingPaise)}`;
+          ? `• ${titleWithDate}: -${formatMoney(Math.abs(remainingPaise))} (Credit)`
+          : `• ${titleWithDate}: ${formatMoney(remainingPaise)}`;
         splitDetails.push(lineText);
         finalSplitIds.push(split._id);
       }

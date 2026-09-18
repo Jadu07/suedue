@@ -5,8 +5,15 @@ import { formatMoney, toRupees } from "@/lib/money";
 import { useRouter } from "next/navigation";
 import UserAvatar from "@/components/UserAvatar";
 import { MessageSquare, Check, CheckCircle2, X } from "lucide-react";
+import { formatSplitTitleWithDate } from "@/lib/whatsappDate";
 
-export default function BillSplitRow({ split, person, totalPaidPaise, remainingPaise }: any) {
+export default function BillSplitRow({
+  split,
+  person,
+  totalPaidPaise,
+  remainingPaise,
+  includeYearInWhatsApp = false,
+}: any) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [amountRupees, setAmountRupees] = useState(toRupees(remainingPaise).toString());
   const [note, setNote] = useState("");
@@ -56,13 +63,8 @@ export default function BillSplitRow({ split, person, totalPaidPaise, remainingP
         let cleanPhone = (person.phone || "").replace(/\D/g, "");
         if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
         const bDate = split.billId?.date ? new Date(split.billId.date) : null;
-        const dateStr = bDate && !isNaN(bDate.getTime())
-          ? bDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-          : "";
-        const title = (split.billId?.title || "Bill").trim();
-        const hasDateAlready = dateStr && title.toLowerCase().includes(dateStr.toLowerCase());
-        const dateSuffix = (dateStr && !hasDateAlready) ? ` ${dateStr}` : "";
-        const msg = data?.messageText || `Hi *${person.name}*,\nPlease pay *${formatMoney(remainingPaise)}* for *${title}*${dateSuffix}.\n\n_Powered by suedue_`;
+        const titleWithDate = formatSplitTitleWithDate(split.billId?.title || "Bill", bDate, Boolean(includeYearInWhatsApp));
+        const msg = data?.messageText || `Hi *${person.name}*,\nPlease pay *${formatMoney(remainingPaise)}* for *${titleWithDate}*.\n\n_Powered by suedue_`;
         window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
       } else {
         alert("WhatsApp message sent successfully!");
@@ -71,13 +73,8 @@ export default function BillSplitRow({ split, person, totalPaidPaise, remainingP
       let cleanPhone = (person.phone || "").replace(/\D/g, "");
       if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
       const bDate = split.billId?.date ? new Date(split.billId.date) : null;
-      const dateStr = bDate && !isNaN(bDate.getTime())
-        ? bDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-        : "";
-      const title = (split.billId?.title || "Bill").trim();
-      const hasDateAlready = dateStr && title.toLowerCase().includes(dateStr.toLowerCase());
-      const dateSuffix = (dateStr && !hasDateAlready) ? ` ${dateStr}` : "";
-      const msg = `Hi *${person.name}*,\nPlease pay *${formatMoney(remainingPaise)}* for *${title}*${dateSuffix}.\n\n_Powered by suedue_`;
+      const titleWithDate = formatSplitTitleWithDate(split.billId?.title || "Bill", bDate, Boolean(includeYearInWhatsApp));
+      const msg = `Hi *${person.name}*,\nPlease pay *${formatMoney(remainingPaise)}* for *${titleWithDate}*.\n\n_Powered by suedue_`;
       window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
     } finally {
       setWaLoading(false);

@@ -9,6 +9,9 @@ import { toRupees, formatMoney } from "@/lib/money";
 import crypto from "crypto";
 import axios from "axios";
 
+import { formatSplitTitleWithDate } from "@/lib/whatsappDate";
+import { getIncludeYearPreference } from "@/lib/whatsappSettings";
+
 import { PaymentTransaction } from "@/models/PaymentTransaction";
 
 export async function POST(req: NextRequest) {
@@ -65,15 +68,11 @@ export async function POST(req: NextRequest) {
 
     const paymentLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000"}/pay/${rawToken}`;
     
-    const bDate = bill.date ? new Date(bill.date) : null;
-    const billDateStr = bDate && !isNaN(bDate.getTime())
-      ? bDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-      : "";
-    const hasDateAlready = billDateStr && bill.title.toLowerCase().includes(billDateStr.toLowerCase());
-    const dateSuffix = (billDateStr && !hasDateAlready) ? ` (${billDateStr})` : "";
+    const includeYear = await getIncludeYearPreference();
+    const titleWithDate = formatSplitTitleWithDate(bill.title, bill.date, includeYear);
     
     const messageText = `Hi *${person.name}*,
-Please pay *${formatMoney(remainingPaise)}* for *${bill.title}*${dateSuffix}.
+Please pay *${formatMoney(remainingPaise)}* for *${titleWithDate}*.
 
 🔗 Pay here:
 ${paymentLink}

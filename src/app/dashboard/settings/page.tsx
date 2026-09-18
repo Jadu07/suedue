@@ -9,6 +9,8 @@ import { Shield, MessageSquare, Cpu, CreditCard, CheckCircle2, ArrowRight } from
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
 import UnsettledBillsManager, { UnsettledBillItem } from "./UnsettledBillsManager";
+import WhatsAppSettingsCard from "./WhatsAppSettingsCard";
+import { AppSetting } from "@/models/AppSetting";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,8 @@ export default async function SettingsPage() {
   const openwaUrl = process.env.OPENWA_URL || "https://openwa-0gjr.onrender.com";
   const pythonUrl = process.env.PYTHON_VERIFIER_URL || "http://127.0.0.1:8000";
   const upiId = process.env.NEXT_PUBLIC_UPI_ID || "yashrajchouhan@fam";
+  const yearSetting = await AppSetting.findOne({ key: "includeYearInWhatsApp" }).lean();
+  const initialIncludeYear = Boolean(yearSetting?.value);
 
   // Query all unsettled bills with linked transaction statistics
   const unsettledBillsRaw = await Bill.find({ status: { $ne: "PAID" } }).sort({ createdAt: -1 }).lean();
@@ -187,6 +191,9 @@ export default async function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* WhatsApp Message Preferences */}
+      <WhatsAppSettingsCard initialIncludeYear={initialIncludeYear} />
 
       {/* Danger Zone: Unsettled Bills Management */}
       <UnsettledBillsManager initialBills={serializedUnsettledBills} />
