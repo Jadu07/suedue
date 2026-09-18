@@ -55,20 +55,30 @@ export default function BillSplitRow({ split, person, totalPaidPaise, remainingP
         // Fallback to direct wa.me
         let cleanPhone = (person.phone || "").replace(/\D/g, "");
         if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
-        const text = encodeURIComponent(
-          `Hi *${person.name}*,\nYou have a pending payment of *${formatMoney(remainingPaise)}* on suedue.\n\n_Powered by suedue_`
-        );
-        window.open(`https://wa.me/${cleanPhone}?text=${text}`, "_blank");
+        const bDate = split.billId?.date ? new Date(split.billId.date) : null;
+        const dateStr = bDate && !isNaN(bDate.getTime())
+          ? bDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+          : "";
+        const title = (split.billId?.title || "Bill").trim();
+        const hasDateAlready = dateStr && title.toLowerCase().includes(dateStr.toLowerCase());
+        const dateSuffix = (dateStr && !hasDateAlready) ? ` ${dateStr}` : "";
+        const msg = data?.messageText || `Hi *${person.name}*,\nPlease pay *${formatMoney(remainingPaise)}* for *${title}*${dateSuffix}.\n\n_Powered by suedue_`;
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
       } else {
         alert("WhatsApp message sent successfully!");
       }
     } catch (err) {
       let cleanPhone = (person.phone || "").replace(/\D/g, "");
       if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
-      const text = encodeURIComponent(
-        `Hi *${person.name}*,\nYou have a pending payment of *${formatMoney(remainingPaise)}* on suedue.\n\n_Powered by suedue_`
-      );
-      window.open(`https://wa.me/${cleanPhone}?text=${text}`, "_blank");
+      const bDate = split.billId?.date ? new Date(split.billId.date) : null;
+      const dateStr = bDate && !isNaN(bDate.getTime())
+        ? bDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+        : "";
+      const title = (split.billId?.title || "Bill").trim();
+      const hasDateAlready = dateStr && title.toLowerCase().includes(dateStr.toLowerCase());
+      const dateSuffix = (dateStr && !hasDateAlready) ? ` ${dateStr}` : "";
+      const msg = `Hi *${person.name}*,\nPlease pay *${formatMoney(remainingPaise)}* for *${title}*${dateSuffix}.\n\n_Powered by suedue_`;
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
     } finally {
       setWaLoading(false);
     }

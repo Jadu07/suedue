@@ -37,9 +37,18 @@ export async function POST(req: NextRequest) {
       
       if (remainingPaise !== 0) {
         totalRemainingPaise += remainingPaise;
+        const bDate = split.billId?.date ? new Date(split.billId.date) : (split.createdAt ? new Date(split.createdAt) : null);
+        const dateStr = bDate && !isNaN(bDate.getTime())
+          ? bDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+          : "";
+
+        const title = (split.billId?.title || "Bill").trim();
+        const hasDateAlready = dateStr && title.toLowerCase().includes(dateStr.toLowerCase());
+        const dateSuffix = (dateStr && !hasDateAlready) ? ` ${dateStr}` : "";
+
         const lineText = remainingPaise < 0 
-          ? `${split.billId?.title || "Credit"}: -${formatMoney(Math.abs(remainingPaise))} (Credit)`
-          : `${split.billId?.title || "Bill"}: ${formatMoney(remainingPaise)}`;
+          ? `• ${title}${dateSuffix}: -${formatMoney(Math.abs(remainingPaise))} (Credit)`
+          : `• ${title}${dateSuffix}: ${formatMoney(remainingPaise)}`;
         splitDetails.push(lineText);
         splitIds.push(split._id);
       }
@@ -79,12 +88,12 @@ export async function POST(req: NextRequest) {
 
     const paymentLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000"}/pay/${rawToken}`;
     
-    // Compose consolidated message
+    // Compose clean message with date on right side of bill
     const messageText = `Hi *${person.name}*,
 You have pending dues of *${formatMoney(totalRemainingPaise)}*.
 
 *Breakdown:*
-${splitDetails.map(d => `• ${d}`).join("\n")}
+${splitDetails.join("\n")}
 
 🔗 Pay all at once here:
 ${paymentLink}

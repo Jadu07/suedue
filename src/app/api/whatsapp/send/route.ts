@@ -65,10 +65,13 @@ export async function POST(req: NextRequest) {
 
     const paymentLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000"}/pay/${rawToken}`;
     
-    const billDateStr = bill.date
-      ? new Date(bill.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+    const bDate = bill.date ? new Date(bill.date) : null;
+    const billDateStr = bDate && !isNaN(bDate.getTime())
+      ? bDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })
       : "";
-    const dateSuffix = billDateStr ? ` (${billDateStr})` : "";
+    const hasDateAlready = billDateStr && bill.title.toLowerCase().includes(billDateStr.toLowerCase());
+    const dateSuffix = (billDateStr && !hasDateAlready) ? ` (${billDateStr})` : "";
+    
     const messageText = `Hi *${person.name}*,
 Please pay *${formatMoney(remainingPaise)}* for *${bill.title}*${dateSuffix}.
 
