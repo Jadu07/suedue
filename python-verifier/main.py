@@ -5,6 +5,7 @@ import email
 import asyncio
 import urllib.request
 from email.header import decode_header
+from email.utils import getaddresses
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -62,6 +63,9 @@ def parse_email_message(msg_bytes: bytes) -> Optional[Dict[str, Any]]:
     """Parses raw email bytes into structured FamPay transaction data."""
     try:
         msg = email.message_from_bytes(msg_bytes)
+        sender_addresses = [address.lower() for _, address in getaddresses(msg.get_all("From", []))]
+        if not any(address.endswith("@famapp.in") for address in sender_addresses):
+            return None
         subject = decode_mime_header(msg.get("Subject", ""))
         
         # Extract plain text body
@@ -133,10 +137,12 @@ def parse_email_message(msg_bytes: bytes) -> Optional[Dict[str, Any]]:
         print(f"[suedue-idle] Error parsing email: {e}")
         return None
 
-def fetch_recent_fampay_emails(client: IMAPClient, limit: int = 3) -> List[Dict[str, Any]]:
+def fetch_recent_fampay_emails(client: IMAPClient, limit: int = 10) -> List[Dict[str, Any]]:
     """Fetches the latest FamPay receipt emails using IMAPClient."""
     try:
-        uids = client.search(["FROM", "no-reply@famapp.in"])
+        # Search the newest messages and let the parser identify FamPay receipts.
+        # Sender addresses can vary between receipt versions.
+        uids = client.search(["FROM", "famapp.in"])
         if not uids:
             return []
         target_uids = uids[-limit:]
@@ -188,7 +194,7 @@ def imap_idle_sync_loop():
             _idle_client = client
 
             # Initial sync of recent transactions
-            init_txns = fetch_recent_fampay_emails(client, limit=3)
+            init_txns = fetch_recent_fampay_emails(client, limit=10)
             if init_txns:
                 _cached_transactions = init_txns
                 _last_sync_time = time.time()
@@ -201,23 +207,34 @@ def imap_idle_sync_loop():
                 client.idle()
                 
                 # Blocks with ZERO CPU usage until Google pushes '* EXISTS' (new email)
-                # or 120s keepalive expires
-                responses = client.idle_check(timeout=120)
+                # or the 2s keepalive expires. Keep IDLE push notifications, but periodically refresh as a
+                # fallback when Gmail does not emit EXISTS immediately.
+                responses = client.idle_check(timeout=2)
                 client.idle_done()
 
                 if responses:
                     print(f"[suedue-idle] ⚡ Push Notification Received from Google IMAP: {responses}")
                     # New email arrived! Fetch the latest FamPay receipt immediately
-                    fresh = fetch_recent_fampay_emails(client, limit=2)
+                    fresh = fetch_recent_fampay_emails(client, limit=10)
                     if fresh:
+                        old_utrs = {item.get("utr") for item in _cached_transactions}
                         _cached_transactions = fresh
                         _last_sync_time = time.time()
                         print(f"[suedue-idle] Parsed {len(fresh)} transactions: UTR={fresh[0].get('utr')} Ref={fresh[0].get('ref_code')}")
                         # Fire internal webhook to Next.js
-                        trigger_nextjs_verify_webhook()
+                        if fresh[0].get("utr") not in old_utrs:
+                            trigger_nextjs_verify_webhook()
                 else:
-                    # Keepalive tick - re-enter IDLE
-                    pass
+                    # Keepalive fallback: refresh even when Gmail omitted a
+                    # push event so verification does not wait for the next IDLE cycle.
+                    fresh = fetch_recent_fampay_emails(client, limit=10)
+                    if fresh:
+                        old_utrs = {item.get("utr") for item in _cached_transactions}
+                        _cached_transactions = fresh
+                        _last_sync_time = time.time()
+                        if fresh[0].get("utr") not in old_utrs:
+                            print(f"[suedue-idle] Poll refresh found UTR={fresh[0].get('utr')} Ref={fresh[0].get('ref_code')}")
+                            trigger_nextjs_verify_webhook()
 
         except Exception as e:
             print(f"[suedue-idle] Connection dropped or error: {e}. Reconnecting in 3s...")

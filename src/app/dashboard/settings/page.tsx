@@ -5,8 +5,7 @@ import { Split } from "@/models/Split";
 import { PaymentTransaction } from "@/models/PaymentTransaction";
 import { PaymentRequest } from "@/models/PaymentRequest";
 import UserAvatar from "@/components/UserAvatar";
-import { Shield, MessageSquare, Cpu, CreditCard, CheckCircle2, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { Shield, MessageSquare, Cpu, CreditCard } from "lucide-react";
 import LogoutButton from "@/components/LogoutButton";
 import UnsettledBillsManager, { UnsettledBillItem } from "./UnsettledBillsManager";
 import WhatsAppSettingsCard from "./WhatsAppSettingsCard";
@@ -59,9 +58,9 @@ export default async function SettingsPage() {
   return (
     <div className="p-md md:p-huge max-w-4xl mx-auto space-y-lg">
       {/* Header */}
-      <div className="hidden md:block">
-        <h1 className="display-lg text-ink font-black tracking-tight">Settings</h1>
-        <p className="text-xs text-ink-mute mt-0.5">
+      <div className="space-y-1 pt-1 md:pt-0">
+        <h1 className="text-2xl md:display-lg text-ink font-black tracking-tight">Settings</h1>
+        <p className="text-xs text-ink-mute max-w-xl">
           System configuration, admin profile, and automation services.
         </p>
       </div>
@@ -81,7 +80,7 @@ export default async function SettingsPage() {
           </span>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3.5 min-w-0">
             <UserAvatar name={adminName} size="lg" />
             <div className="space-y-0.5 min-w-0">
@@ -90,11 +89,6 @@ export default async function SettingsPage() {
               <p className="text-[11px] text-ink-faint">Role: System Administrator</p>
             </div>
           </div>
-          <LogoutButton
-            className="md:hidden shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-canvas-soft hover:bg-red-50/50 border border-hairline hover:border-red-200 text-red-600 font-bold text-xs rounded-xl transition active:scale-95"
-            iconSize={14}
-            text="Logout"
-          />
         </div>
       </div>
 

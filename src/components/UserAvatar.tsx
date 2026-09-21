@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 interface UserAvatarProps {
   name: string;
@@ -31,7 +31,7 @@ export default function UserAvatar({ name, size = "md", className = "" }: UserAv
 
   return (
     <div
-      className={`relative aspect-square rounded-full overflow-hidden border border-hairline bg-canvas-soft flex items-center justify-center shrink-0 select-none shadow-2xs ${sizeClasses} ${className}`}
+      className={`relative aspect-square rounded-full overflow-hidden border border-primary/15 bg-primary/5 flex items-center justify-center shrink-0 select-none shadow-2xs ${sizeClasses} ${className}`}
       style={{
         borderRadius: "50%",
         clipPath: "circle(50% at 50% 50%)",
@@ -43,13 +43,8 @@ export default function UserAvatar({ name, size = "md", className = "" }: UserAv
       {!hasError ? (
         <img
           src={avatarUrl}
-          alt={name}
+          alt={name || "avatar"}
           className="w-full h-full object-cover rounded-full block"
-          style={{
-            borderRadius: "50%",
-            clipPath: "circle(50% at 50% 50%)",
-            WebkitClipPath: "circle(50% at 50% 50%)",
-          }}
           onError={() => setHasError(true)}
           loading="lazy"
         />

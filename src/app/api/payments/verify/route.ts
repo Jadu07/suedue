@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import { PaymentRequest } from "@/models/PaymentRequest";
 import { PaymentTransaction } from "@/models/PaymentTransaction";
@@ -9,7 +9,9 @@ import { AuditLog } from "@/models/AuditLog";
 import axios from "axios";
 import mongoose from "mongoose";
 
-export async function POST(req: NextRequest) {
+let verificationInFlight: Promise<NextResponse> | null = null;
+
+async function verifyPayments() {
   try {
     await dbConnect();
     Person; Bill; Split;
@@ -136,5 +138,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, verifiedCount });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+export async function POST() {
+  if (verificationInFlight) {
+    return NextResponse.json({ success: true, verifying: true }, { status: 202 });
+  }
+
+  verificationInFlight = verifyPayments();
+  try {
+    return await verificationInFlight;
+  } finally {
+    verificationInFlight = null;
   }
 }

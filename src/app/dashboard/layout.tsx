@@ -4,15 +4,10 @@ import { DesktopNav, MobileBottomNav } from "./DashboardNav";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-canvas flex flex-col md:flex-row">
+    <div className="min-h-[100dvh] bg-canvas flex flex-col md:flex-row">
       {/* Mobile Header */}
-      <header className="md:hidden flex items-center justify-between p-lg border-b border-hairline bg-canvas sticky top-0 z-10">
+      <header className="md:hidden flex items-center p-lg pt-[calc(1rem+env(safe-area-inset-top))] border-b border-hairline bg-canvas/95 backdrop-blur-md sticky top-0 z-20">
         <Link href="/dashboard" className="display-md font-black text-primary tracking-tight lowercase">suedue</Link>
-        <LogoutButton
-          className="text-ink-mute hover:text-ink transition-colors flex items-center justify-center p-1"
-          showText={false}
-          iconSize={20}
-        />
       </header>
 
       {/* Desktop Sidebar */}
@@ -32,7 +27,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-canvas pb-24 md:pb-0">
+      <main className="min-h-0 flex-1 overflow-visible bg-canvas pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
         {children}
       </main>
 

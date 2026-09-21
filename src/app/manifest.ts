@@ -6,9 +6,12 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "suedue",
     description: "Personal bill splitting and automated payment collection",
     start_url: "/dashboard",
+    id: "/dashboard",
+    scope: "/",
     display: "standalone",
-    background_color: "#0a0a0a",
-    theme_color: "#0a0a0a",
+    orientation: "portrait",
+    background_color: "#ffffff",
+    theme_color: "#1b1938",
     icons: [
       {
         src: "/icon-192.png",

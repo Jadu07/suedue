@@ -1,85 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { 
-  CheckCircle2, 
-  AlertCircle, 
-  Copy, 
-  Check, 
-  Smartphone, 
-  X, 
-  Info, 
-  Search, 
-  ChevronRight, 
-  ArrowLeft,
-  Building2,
-  ShieldAlert
-} from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { CheckCircle2, Copy, Check, X, Info } from "lucide-react";
 import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/button";
-
-interface UPIAppConfig {
-  id: string;
-  name: string;
-  domain: string;
-  pkg?: string;
-  scheme?: string;
-}
-
-const POPULAR_UPI_APPS: UPIAppConfig[] = [
-  // Top 4 Primary Apps
-  { id: "gpay", name: "Google Pay", domain: "google.com", pkg: "com.google.android.apps.nbu.paisa.user", scheme: "tez://upi/pay" },
-  { id: "phonepe", name: "PhonePe", domain: "phonepe.com", pkg: "com.phonepe.app", scheme: "phonepe://pay" },
-  { id: "paytm", name: "Paytm", domain: "paytm.com", pkg: "net.one97.paytm", scheme: "paytmmp://pay" },
-  { id: "cred", name: "CRED", domain: "cred.club", pkg: "com.dreamplug.androidapp", scheme: "credpay://upi/pay" },
-
-  // Leading UPI & Fintech Apps
-  { id: "bhim", name: "BHIM (NPCI)", domain: "bhimupi.org.in", pkg: "in.org.npci.upiapp", scheme: "upi://pay" },
-  { id: "amazonpay", name: "Amazon Pay", domain: "amazon.in", pkg: "in.amazon.mShop.android.shopping", scheme: "amazonpay://upi/pay" },
-  { id: "navi", name: "Navi UPI", domain: "navi.com", pkg: "com.naviapp", scheme: "navi://upi/pay" },
-  { id: "tataneu", name: "Tata Neu", domain: "tatadigital.com", pkg: "com.tatadigital.tcp", scheme: "tataneu://upi/pay" },
-  { id: "whatsapp", name: "WhatsApp Pay", domain: "whatsapp.com", pkg: "com.whatsapp", scheme: "whatsapp://pay" },
-  { id: "supermoney", name: "Super.money (Flipkart)", domain: "super.money", pkg: "money.super", scheme: "supermoney://upi/pay" },
-  { id: "jupiter", name: "Jupiter Money", domain: "jupiter.money", pkg: "money.jupiter", scheme: "jupiter://upi/pay" },
-  { id: "fi", name: "Fi Money", domain: "fi.money", pkg: "money.fi.banking", scheme: "fi://upi/pay" },
-  { id: "kiwi", name: "Kiwi UPI", domain: "gokiwi.in", pkg: "in.gokiwi.app", scheme: "kiwi://upi/pay" },
-  { id: "mobikwik", name: "MobiKwik", domain: "www.mobikwik.com", pkg: "com.mobikwik_new", scheme: "mobikwik://upi/pay" },
-  { id: "freecharge", name: "Freecharge", domain: "freecharge.in", pkg: "com.freecharge.android", scheme: "freecharge://upi/pay" },
-  { id: "bajaj", name: "Bajaj Finserv", domain: "bajajfinserv.in", pkg: "org.altruist.BajajExperia", scheme: "bajajfinserv://upi/pay" },
-  { id: "samsung", name: "Samsung Pay", domain: "samsung.com", pkg: "com.samsung.android.spay", scheme: "samsungpay://upi/pay" },
-  { id: "zomato", name: "Zomato UPI", domain: "zomato.com", pkg: "com.application.zomato", scheme: "zomato://upi/pay" },
-  { id: "swiggy", name: "Swiggy UPI", domain: "swiggy.com", pkg: "in.swiggy.android", scheme: "swiggy://upi/pay" },
-
-  // Bank UPI Apps
-  { id: "payzapp", name: "PayZapp (HDFC)", domain: "hdfcbank.com", pkg: "com.enStage.wibmo.hdfc", scheme: "payzapp://upi/pay" },
-  { id: "imobile", name: "iMobile Pay (ICICI)", domain: "icicibank.com", pkg: "com.csam.icici.bank.imobile", scheme: "imobile://upi/pay" },
-  { id: "yono", name: "YONO SBI", domain: "onlinesbi.sbi", pkg: "com.sbi.lotusintouch", scheme: "yono://upi/pay" },
-  { id: "kotak", name: "Kotak 811", domain: "kotak.com", pkg: "com.msf.kbank.mobile", scheme: "kotak://upi/pay" },
-  { id: "axis", name: "Axis Mobile", domain: "axisbank.com", pkg: "com.axis.mobile", scheme: "axis://upi/pay" },
-  { id: "bob", name: "bob World (Bank of Baroda)", domain: "bankofbaroda.in", pkg: "com.bankofbaroda.mconnect", scheme: "bobworld://upi/pay" },
-  { id: "canara", name: "Canara ai1", domain: "canarabank.com", pkg: "com.canarabank.mobility", scheme: "canaraai1://upi/pay" },
-  { id: "indusind", name: "IndusInd Bank", domain: "indusind.com", pkg: "com.mgs.indusmobile", scheme: "indus://upi/pay" },
-  { id: "idfc", name: "IDFC FIRST Bank", domain: "idfcfirstbank.com", pkg: "com.idfcfirstbank.optimus", scheme: "idfc://upi/pay" },
-  { id: "yesbank", name: "Yes Bank", domain: "yesbank.in", pkg: "com.yesbank", scheme: "yesbank://upi/pay" },
-  { id: "airtel", name: "Airtel Payments Bank", domain: "airtel.in", pkg: "com.myairtelapp", scheme: "airtel://upi/pay" },
-  { id: "jiopay", name: "JioPay", domain: "jio.com", pkg: "com.jio.media.jiobeats", scheme: "jiopay://upi/pay" },
-  { id: "rbl", name: "RBL MoBank", domain: "rblbank.com", pkg: "com.rblbank.mobank", scheme: "rbl://upi/pay" },
-];
-
-function AppOfficialFavicon({ app }: { app: UPIAppConfig }) {
-  const [imgError, setImgError] = useState(false);
-
-  return (
-    <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white shadow-2xs border border-hairline/60">
-      <img
-        src={!imgError ? `/logos/${app.id}.png` : "/logos/bhim.png"}
-        alt={app.name}
-        onError={() => setImgError(true)}
-        className="w-full h-full object-cover"
-      />
-    </div>
-  );
-}
 
 export default function LivePaymentUI({ token, refCode, billTitle, personName, amountPaise, initialStatus, initialUtr, initialDate, upiId, payeeName }: any) {
   const [status, setStatus] = useState(initialStatus);
@@ -111,29 +35,9 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   }, [initialDate]);
 
   const [showUtrForm, setShowUtrForm] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const [showInstructionModal, setShowInstructionModal] = useState(false);
-  const [modalView, setModalView] = useState<"main" | "other_apps" | "manual" | "phonepe_notice">("main");
-  const [appSearch, setAppSearch] = useState("");
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [copiedNote, setCopiedNote] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isWhatsAppBrowser, setIsWhatsAppBrowser] = useState(false);
-
-  const filteredApps = useMemo(() => {
-    const q = appSearch.trim().toLowerCase();
-    if (!q) return POPULAR_UPI_APPS;
-    return POPULAR_UPI_APPS.filter(a => 
-      a.name.toLowerCase().includes(q) || 
-      a.domain.toLowerCase().includes(q)
-    );
-  }, [appSearch]);
-
-  useEffect(() => {
-    if (typeof navigator !== "undefined") {
-      setIsWhatsAppBrowser(/WhatsApp/i.test(navigator.userAgent));
-    }
-  }, []);
 
   const isDone = status === "PAID" || status === "COMPLETED" || status === "CANCELLED";
 
@@ -151,15 +55,6 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
     }, 1000);
 
     return () => clearInterval(id);
-  }, [isDone]);
-
-  // --- BACKGROUND VERIFY TRIGGER: Run every 4s to catch incoming emails ---
-  useEffect(() => {
-    if (isDone) return;
-    const vId = setInterval(() => {
-      fetch("/api/payments/verify", { method: "POST" }).catch(() => {});
-    }, 4000);
-    return () => clearInterval(vId);
   }, [isDone]);
 
   // --- POLL DB STATUS: every 2.5 seconds ---
@@ -197,6 +92,15 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
 
     return () => clearInterval(id);
   }, [isDone, token]);
+
+  // Keep a single fallback trigger for local/dev setups where the verifier webhook cannot reach Next.js.
+  useEffect(() => {
+    if (isDone) return;
+    const id = setInterval(() => {
+      fetch("/api/payments/verify", { method: "POST" }).catch(() => {});
+    }, 3000);
+    return () => clearInterval(id);
+  }, [isDone]);
 
   // --- INITIAL VERIFY CHECK: Run once on page mount ---
   useEffect(() => {
@@ -319,77 +223,24 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   const amountRupees = (amountPaise / 100).toFixed(2);
 
   const directUpiLink = `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(activePayeeName)}&am=${amountRupees}&cu=INR${cleanToken ? `&tn=${encodeURIComponent(cleanToken)}` : ""}`;
-  const upiQuery = `pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(activePayeeName)}&am=${amountRupees}&cu=INR${cleanToken ? `&tn=${encodeURIComponent(cleanToken)}&tr=${encodeURIComponent(cleanToken)}` : ""}&mode=02`;
-  const genericUpiUrl = directUpiLink;
 
-  const triggerAppLaunch = (app: UPIAppConfig) => {
-    if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(cleanToken).catch(() => {});
-      setToastMessage(`Note "${cleanToken}" copied!`);
-      setTimeout(() => setToastMessage(null), 2500);
-    }
-
-    if (app.id === "phonepe") {
-      window.location.href = directUpiLink;
-      return;
-    }
-
-    const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-    
-    if (isAndroid && app.pkg) {
-      const intentUrl = `intent://pay?${upiQuery}#Intent;scheme=upi;package=${app.pkg};end`;
-      window.location.href = intentUrl;
-    } else if (app.scheme) {
-      const schemeUrl = `${app.scheme}?${upiQuery}`;
-      window.location.href = schemeUrl;
-    } else {
-      window.location.href = genericUpiUrl;
-    }
+  const copyValue = (value: string, setCopied: (value: boolean) => void) => {
+    if (typeof navigator === "undefined" || !navigator.clipboard) return;
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
   };
 
-  const handleOpenSystemChooser = () => {
-    if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(cleanToken).catch(() => {});
-      setToastMessage(`Note "${cleanToken}" copied!`);
-      setTimeout(() => setToastMessage(null), 2500);
-    }
+  const handleCopyUpi = () => copyValue(activeUpiId, setCopiedUpi);
 
-    const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-    if (isAndroid) {
-      window.location.href = `intent://pay?${upiQuery}#Intent;scheme=upi;action=android.intent.action.VIEW;end;`;
-    } else {
-      window.location.href = genericUpiUrl;
-    }
-  };
-
-  const handleCopyUpi = () => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(activeUpiId);
-      setCopiedUpi(true);
-      setTimeout(() => setCopiedUpi(false), 2000);
-    }
-  };
-
-  const handleCopyNote = () => {
-    if (typeof navigator !== "undefined" && navigator.clipboard && cleanToken) {
-      navigator.clipboard.writeText(cleanToken);
-      setCopiedNote(true);
-      setTimeout(() => setCopiedNote(false), 2000);
-    }
-  };
+  const handleCopyNote = () => cleanToken && copyValue(cleanToken, setCopiedNote);
 
   const mins = Math.floor(timeLeft / 60);
   const secs = (timeLeft % 60).toString().padStart(2, "0");
 
   return (
     <>
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-ink text-canvas text-xs font-bold py-2 px-4 rounded-full shadow-2xl z-50 animate-in fade-in duration-150 whitespace-nowrap">
-          {toastMessage}
-        </div>
-      )}
-
       <div className="w-full max-w-[448px] bg-canvas-soft border border-hairline rounded-xl shadow-lg p-xl md:p-xxl text-center">
         <div className="mb-xl">
           <p className="text-ink-mute micro uppercase tracking-wider mb-xs">Payment Request</p>
@@ -410,7 +261,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
             <p className="body-strong mb-md">Pay using UPI</p>
             <div className="bg-white p-sm rounded-md mb-md w-48 h-48 flex items-center justify-center text-ink-mute border-4 border-white overflow-hidden relative">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(genericUpiUrl)}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(directUpiLink)}`}
                 alt="UPI QR Code"
                 className="w-full h-full object-cover"
               />
@@ -421,7 +272,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
               onClick={() => setShowInstructionModal(true)}
               className="bg-white text-primary px-lg py-sm rounded-full font-bold mb-md hover:bg-gray-100 active:scale-95 transition shadow-sm cursor-pointer"
             >
-              Pay with Bank / UPI App
+              Payment instructions
             </button>
 
             <p className="micro opacity-80 text-center mb-xs">Scan or click to open any UPI / Bank app</p>
@@ -451,7 +302,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
               onClick={() => { setShowUtrForm(true); setUtrSubmitted(false); }}
               className="mt-md text-xs text-white/80 underline hover:text-white transition text-center cursor-pointer"
             >
-              Paid via an app without notes? Verify with UTR number →
+              <span className="text-[11px]">Paid via an app without notes? Verify with UTR number →</span>
             </button>
           </div>
         ) : (
@@ -558,12 +409,6 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                 Ensure the exact amount is entered and paste the <strong className="text-ink">Note</strong> into your payment remarks for instant auto-verification:
               </p>
 
-              {/* Exact Amount */}
-              <div className="flex items-center justify-between bg-canvas border border-hairline px-3 py-2 rounded-lg">
-                <span className="text-xs text-ink-mute font-medium">Payable Amount:</span>
-                <span className="font-mono font-bold text-base text-ink">₹{amountRupees}</span>
-              </div>
-
               {/* Note / Remarks */}
               <div className="flex items-center justify-between bg-canvas border border-hairline px-3 py-2 rounded-lg gap-2">
                 <div className="min-w-0">
@@ -575,6 +420,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                 <button
                   type="button"
                   onClick={handleCopyNote}
+                  aria-label="Copy payment note"
                   className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-hairline bg-canvas-soft hover:bg-canvas active:scale-95 transition shrink-0 cursor-pointer shadow-2xs"
                 >
                   {copiedNote ? (
@@ -585,7 +431,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5 text-ink-mute" />
-                      <span>Copy Note</span>
+                      <span>Copy</span>
                     </>
                   )}
                 </button>
@@ -602,6 +448,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                 <button
                   type="button"
                   onClick={handleCopyUpi}
+                  aria-label="Copy UPI ID"
                   className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-hairline bg-canvas-soft hover:bg-canvas active:scale-95 transition shrink-0 cursor-pointer shadow-2xs"
                 >
                   {copiedUpi ? (
@@ -612,525 +459,34 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5 text-ink-mute" />
-                      <span>Copy ID</span>
+                      <span>Copy</span>
                     </>
                   )}
                 </button>
               </div>
             </div>
 
-            {/* Button below instruction */}
-            <div className="pt-1 space-y-2">
+            <div className="pt-1 space-y-3">
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
+                <p className="font-bold mb-1">How to pay</p>
+                <ol className="list-decimal list-inside space-y-1 text-ink-mute">
+                  <li>Open any UPI or bank app and scan the QR code.</li>
+                  <li>Pay the exact amount and add the note shown above.</li>
+                  <li><strong className="text-ink">If anything does not work</strong>, take a <strong className="text-ink">screenshot</strong> of this QR code, <strong className="text-ink">upload it</strong> in your payment app, and pay.</li>
+                </ol>
+              </div>
               <a
                 href={directUpiLink}
-                onClick={() => {
-                  if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
-                    navigator.clipboard.writeText(cleanToken).catch(() => {});
-                    setToastMessage(`Note "${cleanToken}" copied!`);
-                    setTimeout(() => setToastMessage(null), 3000);
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-ink text-canvas hover:bg-ink/90 active:scale-[0.98] rounded-xl text-sm font-bold transition cursor-pointer shadow-sm text-center"
+                className="w-full flex items-center justify-center py-3 px-4 bg-ink text-canvas hover:bg-ink/90 active:scale-[0.98] rounded-xl text-sm font-bold transition cursor-pointer shadow-sm text-center"
               >
-                <Smartphone className="w-4 h-4" />
-                <span>Open Bank / UPI App &amp; Pay ₹{amountRupees}</span>
+                Open your UPI app
               </a>
-
-              <p className="text-[11px] text-center text-ink-mute">
-                Note <strong className="text-ink font-mono">{cleanToken}</strong> will be copied automatically to your clipboard.
-              </p>
             </div>
 
           </div>
         </div>
       )}
 
-      {/* ===================== CHOOSE UPI APP POPUP MODAL (CURRENTLY HIDDEN) ===================== */}
-      {false && showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="bg-canvas border border-hairline rounded-t-2xl sm:rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto text-left animate-in slide-in-from-bottom-6 duration-200 relative">
-            
-            {/* Toast Notification when note is copied */}
-            {toastMessage && (
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-ink text-canvas text-xs font-bold py-1.5 px-4 rounded-full shadow-lg z-20 animate-in fade-in duration-150 whitespace-nowrap">
-                {toastMessage}
-              </div>
-            )}
-
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-hairline pb-3">
-              <div className="flex items-center gap-2">
-                {modalView !== "main" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalView("main");
-                      setAppSearch("");
-                    }}
-                    className="p-1.5 -ml-1.5 text-ink-mute hover:text-ink rounded-lg transition active:scale-95 cursor-pointer"
-                    aria-label="Back"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </button>
-                )}
-                <div>
-                  <h3 className="font-bold text-ink text-base">
-                    {modalView === "main" && "Pay with UPI"}
-                    {modalView === "other_apps" && "Select UPI App"}
-                    {modalView === "manual" && "Pay via Bank (To UPI ID)"}
-                    {modalView === "phonepe_notice" && "PhonePe Payment Notice"}
-                  </h3>
-                  <p className="text-xs text-ink-mute mt-0.5">
-                    {modalView === "main" && "Select your preferred app"}
-                    {modalView === "other_apps" && "Search 30+ official UPI apps"}
-                    {modalView === "manual" && "Bypass ₹2,000 limit & wallet restrictions"}
-                    {modalView === "phonepe_notice" && "Bypass PhonePe's ₹2,000 link restriction"}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                className="p-1 text-ink-mute hover:text-ink rounded-lg transition cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* MANDATORY INSTRUCTIONS BANNER */}
-            <div className="bg-canvas-soft border border-hairline rounded-xl p-3.5 space-y-1.5">
-              <div className="flex items-center gap-2 text-ink font-bold text-xs">
-                <Info className="w-3.5 h-3.5 text-ink shrink-0" />
-                <span>Instant Auto-Verification Instruction</span>
-              </div>
-              <p className="text-xs text-ink-mute leading-relaxed">
-                Ensure amount is <strong className="text-ink font-mono font-bold">₹{amountRupees}</strong> and add Note <strong className="text-ink font-mono font-bold">{cleanToken}</strong> into your payment remarks.
-              </p>
-            </div>
-
-            {/* ================= VIEW 1: MAIN MINIMAL VIEW ================= */}
-            {modalView === "main" && (
-              <div className="space-y-3.5">
-                {/* 4 Primary Top Apps with Real Official Logos */}
-                <div className="grid grid-cols-2 gap-2">
-                  {POPULAR_UPI_APPS.slice(0, 4).map((app) => (
-                    app.id === "phonepe" ? (
-                      <a
-                        key={app.id}
-                        href={directUpiLink}
-                        onClick={() => {
-                          if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
-                            navigator.clipboard.writeText(cleanToken).catch(() => {});
-                            setToastMessage(`Note "${cleanToken}" copied!`);
-                            setTimeout(() => setToastMessage(null), 2500);
-                          }
-                        }}
-                        className="flex items-center gap-2.5 py-3 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 cursor-pointer text-left"
-                      >
-                        <AppOfficialFavicon app={app} />
-                        <span className="truncate">{app.name}</span>
-                      </a>
-                    ) : (
-                      <button
-                        key={app.id}
-                        type="button"
-                        onClick={() => triggerAppLaunch(app)}
-                        className="flex items-center gap-2.5 py-3 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 cursor-pointer text-left"
-                      >
-                        <AppOfficialFavicon app={app} />
-                        <span className="truncate">{app.name}</span>
-                      </button>
-                    )
-                  ))}
-                </div>
-
-                {/* Other UPI Apps Button -> Opens Search Directory */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAppSearch("");
-                    setModalView("other_apps");
-                  }}
-                  className="w-full flex items-center justify-between py-3 px-4 bg-canvas-soft hover:bg-canvas active:scale-[0.98] border border-hairline rounded-xl text-xs font-bold text-ink transition cursor-pointer shadow-2xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Search className="w-4 h-4 text-ink-mute" />
-                    <span>Other UPI Apps (BHIM, Navi, Tata Neu, Banks...)</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-ink-mute" />
-                </button>
-
-                {/* Bank Account Direct Bypass Option */}
-                <div className="bg-canvas-soft border border-hairline rounded-xl p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-ink flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5 text-primary" />
-                        <span>Paying from Bank Account?</span>
-                      </p>
-                      <p className="text-[11px] text-ink-mute leading-relaxed">
-                        If PhonePe/GPay restricts bank accounts or shows a ₹2,000 limit, pay directly to UPI ID.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setModalView("manual")}
-                      className="px-2.5 py-1.5 bg-canvas border border-hairline hover:border-ink/20 rounded-lg text-xs font-bold text-ink whitespace-nowrap active:scale-95 transition shadow-2xs cursor-pointer shrink-0"
-                    >
-                      Pay via Bank →
-                    </button>
-                  </div>
-                </div>
-
-                {/* Manual Transfer / Copy Note Action */}
-                <div className="pt-2 border-t border-hairline">
-                  <button
-                    type="button"
-                    onClick={() => setModalView("manual")}
-                    className="w-full text-center text-xs font-semibold text-ink-mute hover:text-ink underline transition py-1 cursor-pointer"
-                  >
-                    Not using a direct UPI app? Copy message & details →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ================= VIEW 2: SEARCHABLE LIST OF ALL 30+ UPI APPS ================= */}
-            {modalView === "other_apps" && (
-              <div className="space-y-3">
-                {/* Search Bar */}
-                <div className="relative">
-                  <Search className="w-4 h-4 text-ink-mute absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="Search 30+ UPI apps (e.g. BHIM, Navi, HDFC...)"
-                    value={appSearch}
-                    onChange={(e) => setAppSearch(e.target.value)}
-                    autoFocus
-                    className="w-full bg-canvas text-ink border border-hairline rounded-xl pl-9 pr-8 py-2.5 text-xs focus:outline-none focus:border-ink transition font-medium"
-                  />
-                  {appSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setAppSearch("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-mute hover:text-ink p-1 cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Filtered Apps Grid with Real Official Brand Favicons */}
-                <div className="grid grid-cols-2 gap-2 max-h-[46vh] overflow-y-auto pr-0.5">
-                  {filteredApps.map((app) => (
-                    app.id === "phonepe" ? (
-                      <a
-                        key={app.id}
-                        href={directUpiLink}
-                        onClick={() => {
-                          if (cleanToken && typeof navigator !== "undefined" && navigator.clipboard) {
-                            navigator.clipboard.writeText(cleanToken).catch(() => {});
-                            setToastMessage(`Note "${cleanToken}" copied!`);
-                            setTimeout(() => setToastMessage(null), 2500);
-                          }
-                        }}
-                        className="flex items-center gap-2.5 py-2.5 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 text-left cursor-pointer"
-                      >
-                        <AppOfficialFavicon app={app} />
-                        <span className="truncate">{app.name}</span>
-                      </a>
-                    ) : (
-                      <button
-                        key={app.id}
-                        type="button"
-                        onClick={() => triggerAppLaunch(app)}
-                        className="flex items-center gap-2.5 py-2.5 px-3 bg-canvas hover:bg-canvas-soft active:scale-[0.97] border border-hairline rounded-xl font-bold text-xs text-ink transition shadow-2xs hover:border-ink/20 text-left cursor-pointer"
-                      >
-                        <AppOfficialFavicon app={app} />
-                        <span className="truncate">{app.name}</span>
-                      </button>
-                    )
-                  ))}
-                </div>
-
-                {/* FALLBACK: IF APP NOT FOUND OR AT THE END -> OPEN IN PHONE'S APP CHOOSER */}
-                <div className="pt-2 border-t border-hairline space-y-2">
-                  <div className="bg-canvas-soft/80 border border-hairline rounded-xl p-3 text-center space-y-2">
-                    <p className="text-xs text-ink-mute">
-                      {filteredApps.length === 0
-                        ? "App not found in directory? Launch your phone's native app chooser:"
-                        : "Don't see your specific app listed?"}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleOpenSystemChooser}
-                      className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-ink text-canvas hover:bg-ink/90 rounded-xl text-xs font-bold transition active:scale-[0.98] cursor-pointer shadow-sm"
-                    >
-                      <Smartphone className="w-3.5 h-3.5" />
-                      <span>Open in Phone&apos;s App Chooser</span>
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setModalView("manual")}
-                    className="w-full text-center text-xs text-ink-mute hover:text-ink underline py-1 transition cursor-pointer"
-                  >
-                    Paying via NetBanking or cash? Copy details manually →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ================= VIEW 3: COPY MESSAGE / DETAILS FOR INSTANT VERIFICATION ================= */}
-            {modalView === "manual" && (
-              <div className="space-y-3.5">
-                <div className="bg-canvas-soft border border-hairline rounded-xl p-3 text-xs text-ink leading-relaxed space-y-1.5">
-                  <p className="font-bold flex items-center gap-1.5 text-ink">
-                    <Building2 className="w-3.5 h-3.5 text-primary" />
-                    <span>Direct UPI ID Transfer (Bank Accounts Enabled)</span>
-                  </p>
-                  <p className="text-ink-mute text-[11px] leading-relaxed">
-                    UPI apps (like PhonePe) restrict browser links to wallets or ₹2,000 max. 
-                    To pay from any <strong>Bank Account</strong> with full limits, open PhonePe/GPay, tap <strong>&ldquo;To UPI ID&rdquo;</strong>, and enter these details:
-                  </p>
-                </div>
-
-                {/* Verified Payee Name */}
-                <div className="bg-canvas border border-hairline rounded-xl p-3 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-ink-mute tracking-wider block">
-                      Verified Payee Name
-                    </span>
-                    <span className="font-bold text-sm text-ink truncate block">{activePayeeName}</span>
-                  </div>
-                  <span className="text-[11px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                    Verified
-                  </span>
-                </div>
-
-                {/* Copy Card: Note / Token */}
-                <div className="bg-canvas border border-hairline rounded-xl p-3 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-ink-mute tracking-wider block">
-                      Message / Remarks Note (Required)
-                    </span>
-                    <span className="font-mono font-bold text-sm text-ink">{cleanToken}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyNote}
-                    className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-hairline bg-canvas-soft hover:bg-canvas active:scale-95 transition shrink-0 cursor-pointer"
-                  >
-                    {copiedNote ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-emerald-600">Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 text-ink-mute" />
-                        <span>Copy Note</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* Copy Card: UPI ID */}
-                <div className="bg-canvas border border-hairline rounded-xl p-3 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-ink-mute tracking-wider block">
-                      Receiving UPI ID
-                    </span>
-                    <span className="font-mono font-bold text-sm text-ink truncate block">{activeUpiId}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyUpi}
-                    className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-hairline bg-canvas-soft hover:bg-canvas active:scale-95 transition shrink-0 cursor-pointer"
-                  >
-                    {copiedUpi ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-emerald-600">Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 text-ink-mute" />
-                        <span>Copy ID</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* Amount Card */}
-                <div className="bg-canvas border border-hairline rounded-xl p-3 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-ink-mute tracking-wider block">
-                      Payable Amount
-                    </span>
-                    <span className="font-mono font-bold text-sm text-ink">₹{amountRupees}</span>
-                  </div>
-                  <span className="text-xs text-ink-mute font-semibold">Exact Amount</span>
-                </div>
-
-                {/* UTR Fallback Button */}
-                <div className="pt-2 border-t border-hairline">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      setShowUtrForm(true);
-                      setUtrSubmitted(false);
-                    }}
-                    className="w-full py-2 px-3 text-center text-xs font-bold text-ink underline hover:text-ink/80 transition cursor-pointer"
-                  >
-                    Paid without remarks? Verify with 12-digit UTR number →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ================= VIEW 4: PHONEPE BANK ACCOUNT RESTRICTION BYPASS ================= */}
-            {modalView === "phonepe_notice" && (
-              <div className="space-y-3.5">
-                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-ink leading-relaxed space-y-1.5">
-                  <p className="font-bold flex items-center gap-1.5 text-amber-900">
-                    <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>PhonePe Bank Account Restriction</span>
-                  </p>
-                  <p className="text-ink-mute text-[11px] leading-relaxed">
-                    PhonePe deliberately <strong>disables Bank Accounts</strong> on website links and forces Wallet-only (showing a &ldquo;gallery QR / 2,000&rdquo; notice, even for ₹2).
-                  </p>
-                </div>
-
-                <div className="space-y-2.5">
-                  <p className="text-xs font-bold text-ink">To pay from your Bank Account, choose:</p>
-
-                  {/* Option 1: Pay with Paytm (Confirmed working 100% by user) */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const paytmApp = POPULAR_UPI_APPS.find(a => a.id === "paytm");
-                      if (paytmApp) triggerAppLaunch(paytmApp);
-                    }}
-                    className="w-full text-left p-3 bg-canvas-soft hover:bg-canvas active:scale-[0.98] border border-hairline hover:border-ink/30 rounded-xl transition cursor-pointer shadow-2xs space-y-1"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-ink flex items-center gap-1.5">
-                        <AppOfficialFavicon app={POPULAR_UPI_APPS.find(a => a.id === "paytm")!} />
-                        <span>Pay with Paytm (1-Tap &amp; Bank Enabled)</span>
-                      </span>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">
-                        Recommended
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-ink-mute leading-relaxed pl-7">
-                      Paytm allows direct bank account transfers with pre-filled amount (₹{amountRupees}) and note ({cleanToken}).
-                    </p>
-                  </button>
-
-                  {/* Option 2: Pay via PhonePe "To UPI ID" */}
-                  <div className="bg-canvas border border-hairline rounded-xl p-3 space-y-2.5 shadow-2xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-ink flex items-center gap-1.5">
-                        <AppOfficialFavicon app={POPULAR_UPI_APPS.find(a => a.id === "phonepe")!} />
-                        <span>Pay in PhonePe via &ldquo;To UPI ID&rdquo;</span>
-                      </span>
-                      <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">
-                        All Banks
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-ink-mute leading-relaxed">
-                      Inside PhonePe, bank accounts work without any restrictions. Copy details and open PhonePe:
-                    </p>
-
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex items-center justify-between bg-canvas-soft border border-hairline px-2.5 py-1.5 rounded-lg text-xs">
-                        <div>
-                          <span className="text-[10px] text-ink-mute uppercase font-bold block">UPI ID</span>
-                          <span className="font-mono font-bold text-ink">{activeUpiId}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleCopyUpi}
-                          className="text-[10px] font-bold px-2 py-1 bg-canvas border border-hairline rounded hover:bg-canvas-soft active:scale-95 text-ink cursor-pointer"
-                        >
-                          {copiedUpi ? "✓ Copied" : "Copy ID"}
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between bg-canvas-soft border border-hairline px-2.5 py-1.5 rounded-lg text-xs">
-                        <div>
-                          <span className="text-[10px] text-ink-mute uppercase font-bold block">Note (Remarks)</span>
-                          <span className="font-mono font-bold text-ink">{cleanToken}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleCopyNote}
-                          className="text-[10px] font-bold px-2 py-1 bg-canvas border border-hairline rounded hover:bg-canvas-soft active:scale-95 text-ink cursor-pointer"
-                        >
-                          {copiedNote ? "✓ Copied" : "Copy Note"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (typeof navigator !== "undefined" && navigator.clipboard) {
-                          navigator.clipboard.writeText(activeUpiId).catch(() => {});
-                          setToastMessage(`Copied ${activeUpiId}! Open "To UPI ID" in PhonePe`);
-                          setTimeout(() => setToastMessage(null), 3000);
-                        }
-                        const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-                        if (isAndroid) {
-                          window.location.href = "intent://#Intent;package=com.phonepe.app;end";
-                        } else {
-                          window.location.href = "phonepe://";
-                        }
-                      }}
-                      className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-ink text-canvas hover:bg-ink/90 rounded-xl text-xs font-bold transition active:scale-[0.98] cursor-pointer shadow-sm"
-                    >
-                      <Smartphone className="w-3.5 h-3.5" />
-                      <span>Copy ID &amp; Launch PhonePe App</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Force raw PhonePe link anyway */}
-                <div className="pt-1 text-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-                      if (isAndroid) {
-                        window.location.href = `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.phonepe.app;end`;
-                      } else {
-                        window.location.href = `phonepe://pay?${upiQuery}`;
-                      }
-                    }}
-                    className="text-[11px] text-ink-mute hover:text-ink underline transition cursor-pointer py-1"
-                  >
-                    Try direct link anyway (PhonePe Wallet / RuPay CC only) →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Tip for in-app browsers like WhatsApp */}
-            {isWhatsAppBrowser && (
-              <div className="bg-canvas-soft border border-hairline rounded-xl p-2.5 text-[11px] text-ink-mute flex items-start gap-2">
-                <span className="text-sm shrink-0">💡</span>
-                <p>
-                  <strong>Tip:</strong> If your UPI app doesn&apos;t launch from WhatsApp, tap the <strong>3 dots (⋮)</strong> at top right and choose <strong>&ldquo;Open in Chrome / Browser&rdquo;</strong>.
-                </p>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
     </>
   );
 }
