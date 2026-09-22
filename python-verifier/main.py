@@ -67,17 +67,6 @@ def parse_email_message(msg_bytes: bytes) -> Optional[Dict[str, Any]]:
         if not any(address.endswith("@famapp.in") for address in sender_addresses):
             return None
         subject = decode_mime_header(msg.get("Subject", ""))
-        subject_amount_match = re.search(
-            r"you\s+received\s+₹\s*([\d,]+(?:\.\d+)?)",
-            subject,
-            re.IGNORECASE,
-        )
-        subject_amount_paise = (
-            int(round(float(subject_amount_match.group(1).replace(",", "")) * 100))
-            if subject_amount_match
-            else None
-        )
-        
         # Extract plain text body
         body = ""
         if msg.is_multipart():
@@ -92,7 +81,9 @@ def parse_email_message(msg_bytes: bytes) -> Optional[Dict[str, Any]]:
             if payload:
                 body = payload.decode(errors="ignore")
 
-        full_text = f"{subject}\n{body}"
+        # Verification uses the parsed receipt body. The subject is never
+        # treated as proof of payment.
+        full_text = body
         if "famx" not in full_text.lower() and "fampay" not in full_text.lower():
             return None
 
@@ -101,11 +92,7 @@ def parse_email_message(msg_bytes: bytes) -> Optional[Dict[str, Any]]:
         if amt_match:
             amount_rupees = float(amt_match.group(1))
         else:
-            sub_amt = re.search(r"received\s+₹([\d.]+)", subject, re.IGNORECASE)
-            if sub_amt:
-                amount_rupees = float(sub_amt.group(1))
-            else:
-                return None
+            return None
 
         amount_paise = int(round(amount_rupees * 100))
 
@@ -135,7 +122,6 @@ def parse_email_message(msg_bytes: bytes) -> Optional[Dict[str, Any]]:
         raw_date = msg.get("Date", "")
         return {
             "amount_paise": amount_paise,
-            "subject_amount_paise": subject_amount_paise,
             "amount_rupees": amount_rupees,
             "ref_code": ref_code,
             "sender_name": sender_name.title(),
@@ -147,60 +133,6 @@ def parse_email_message(msg_bytes: bytes) -> Optional[Dict[str, Any]]:
     except Exception as e:
         print(f"[suedue-idle] Error parsing email: {e}")
         return None
-
-def parse_subject_message(msg_bytes: bytes) -> Optional[Dict[str, Any]]:
-    """Builds a provisional transaction from a trusted receipt subject."""
-    try:
-        msg = email.message_from_bytes(msg_bytes)
-        sender_addresses = [address.lower() for _, address in getaddresses(msg.get_all("From", []))]
-        if not any(address.endswith("@famapp.in") for address in sender_addresses):
-            return None
-
-        subject = decode_mime_header(msg.get("Subject", ""))
-        amount_match = re.search(
-            r"you\s+received\s+₹\s*([\d,]+(?:\.\d+)?)",
-            subject,
-            re.IGNORECASE,
-        )
-        if not amount_match or "famx" not in subject.lower():
-            return None
-
-        amount_rupees = float(amount_match.group(1).replace(",", ""))
-        amount_paise = int(round(amount_rupees * 100))
-        return {
-            "amount_paise": amount_paise,
-            "subject_amount_paise": amount_paise,
-            "amount_rupees": amount_rupees,
-            "ref_code": None,
-            "sender_name": "UPI User",
-            "utr": None,
-            "txn_id": "PENDING",
-            "date": datetime.now(timezone.utc).isoformat(),
-            "raw_date": msg.get("Date", ""),
-        }
-    except Exception:
-        return None
-
-def fetch_recent_subject_emails(client: IMAPClient, limit: int = 10) -> List[Dict[str, Any]]:
-    """Fetches only receipt headers so the UI can enter PROCESSING first."""
-    try:
-        uids = client.search(["FROM", "famapp.in"])
-        if not uids:
-            return []
-        target_uids = uids[-limit:]
-        response = client.fetch(target_uids, ["BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)]"])
-        parsed = []
-        for uid in reversed(target_uids):
-            values = response.get(uid, {})
-            header = next((value for key, value in values.items() if "HEADER" in str(key).upper()), None)
-            item = parse_subject_message(header) if header else None
-            if item:
-                item["email_id"] = str(uid)
-                parsed.append(item)
-        return parsed
-    except Exception as e:
-        print(f"[suedue-idle] Subject fetch error: {e}")
-        return []
 
 def fetch_recent_fampay_emails(client: IMAPClient, limit: int = 10) -> List[Dict[str, Any]]:
     """Fetches the latest FamPay receipt emails using IMAPClient."""
@@ -227,18 +159,8 @@ def fetch_recent_fampay_emails(client: IMAPClient, limit: int = 10) -> List[Dict
         return []
 
 def sync_recent_transactions(client: IMAPClient) -> None:
-    """Publish subject state first, then replace it with full parsed details."""
+    """Refresh the cache from fully parsed receipt emails."""
     global _cached_transactions, _last_sync_time
-
-    subject_items = fetch_recent_subject_emails(client)
-    if subject_items:
-        old_ids = {item.get("email_id") for item in _cached_transactions}
-        _cached_transactions = subject_items
-        _last_sync_time = time.time()
-        if any(item.get("email_id") not in old_ids for item in subject_items):
-            trigger_nextjs_verify_webhook()
-        # Give the client a chance to render PROCESSING before full validation.
-        time.sleep(0.8)
 
     full_items = fetch_recent_fampay_emails(client)
     if full_items:
@@ -286,7 +208,7 @@ def imap_idle_sync_loop():
             _idle_client = client
 
             # Initial sync of recent transactions
-            init_txns = fetch_recent_subject_emails(client)
+            init_txns = fetch_recent_fampay_emails(client)
             if init_txns:
                 _cached_transactions = init_txns
                 _last_sync_time = time.time()
@@ -457,12 +379,7 @@ async def verify_batch(req: BatchVerifyRequest):
     txns = _cached_transactions
     used = set(req.used_utrs or [])
     matches = {}
-    processing = []
     claimed_in_this_run = set()
-    amount_counts = {}
-    for item in req.requests:
-        expected = int(round(item.amount))
-        amount_counts[expected] = amount_counts.get(expected, 0) + 1
 
     for item in req.requests:
         expected_paise = int(round(item.amount))
@@ -473,12 +390,6 @@ async def verify_batch(req: BatchVerifyRequest):
         for tx in txns:
             utr = tx["utr"]
             if not utr:
-                if (
-                    tx.get("subject_amount_paise") == expected_paise
-                    and amount_counts[expected_paise] == 1
-                ):
-                    processing.append(item.id)
-                    break
                 continue
 
             if utr in used or utr in claimed_in_this_run:
@@ -526,7 +437,6 @@ async def verify_batch(req: BatchVerifyRequest):
     return {
         "status": "OK",
         "matches": matches,
-        "processing": processing,
         "verified_count": len(matches)
     }
 

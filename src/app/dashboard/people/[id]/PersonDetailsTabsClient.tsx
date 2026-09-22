@@ -425,23 +425,19 @@ export default function PersonDetailsTabsClient({
                     </Link>
                     <button
                       type="button"
-                      onClick={() => handleGenerateLink(true)}
-                      disabled={selectedSplits.size === 0 || sendingLink}
-                      className="w-full sm:w-auto text-xs font-bold py-2.5 px-6 rounded-xl bg-ink text-canvas hover:bg-ink/90 active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none transition shadow-sm"
-                    >
-                      {sendingLink
-                        ? "Creating link…"
-                        : selectedSplits.size > 0
-                          ? selectedHasActiveLink ? "Update & send link" : "Generate & send link"
-                          : "Select Bills to Continue"}
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => handleGenerateLink(false)}
                       disabled={selectedSplits.size === 0 || sendingLink}
                       className="w-full sm:w-auto text-xs font-bold py-2.5 px-4 rounded-xl border border-hairline bg-canvas text-ink hover:bg-canvas-soft active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none transition"
                     >
-                      {selectedHasActiveLink ? "Update link only" : "Create link only"}
+                      Update
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateLink(true)}
+                      disabled={selectedSplits.size === 0 || sendingLink}
+                      className="w-full sm:w-auto text-xs font-bold py-2.5 px-6 rounded-xl bg-ink text-canvas hover:bg-ink/90 active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none transition shadow-sm"
+                    >
+                      {sendingLink ? "Creating link…" : selectedSplits.size > 0 ? "Generate and send" : "Select Bills to Continue"}
                     </button>
                   </div>
                 </div>

@@ -17,7 +17,7 @@ const PaymentRequestSchema = new mongoose.Schema(
     },
     verificationStatus: {
       type: String,
-      enum: ["IDLE", "PROCESSING", "VERIFIED"],
+      enum: ["IDLE", "VERIFIED"],
       default: "IDLE",
     },
     userProvidedUtr: { type: String, default: null },

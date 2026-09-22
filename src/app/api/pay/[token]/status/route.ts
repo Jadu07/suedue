@@ -23,9 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     if (!payReq) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     let isPaid = payReq.status === "COMPLETED";
-    const pendingStatus = payReq.verificationStatus === "PROCESSING"
-      ? "PROCESSING"
-      : (payReq.status || "PENDING");
+    const pendingStatus = payReq.status || "PENDING";
     const { PaymentTransaction } = await import("@/models/PaymentTransaction");
     let tx = null;
 
@@ -117,7 +115,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     if (!payReq) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     payReq.userProvidedUtr = utr;
-    payReq.verificationStatus = "PROCESSING";
+    payReq.verificationStatus = "IDLE";
     await payReq.save();
 
     return NextResponse.json({ success: true, message: "UTR submitted successfully" });

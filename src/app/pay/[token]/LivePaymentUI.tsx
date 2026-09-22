@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { CheckCircle2, Copy, Check, X, Info, Loader2 } from "lucide-react";
+import { CheckCircle2, Copy, Check, X, Info } from "lucide-react";
 import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 
@@ -44,8 +44,7 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
   const triggerVerification = useCallback(async () => {
     try {
       const response = await fetch("/api/payments/verify", { method: "POST" });
-      const data = response.ok ? await response.json() : null;
-      if (data?.processingCount > 0) setStatus("PROCESSING");
+      if (!response.ok) return;
     } catch {}
   }, []);
 
@@ -93,8 +92,6 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
                 }
               } catch {}
             }
-          } else if (data.status === "PROCESSING") {
-            setStatus("PROCESSING");
           } else if (data.status === "ACTIVE") {
             setStatus("ACTIVE");
           }
@@ -224,38 +221,6 @@ export default function LivePaymentUI({ token, refCode, billTitle, personName, a
       <div className="w-full max-w-[448px] text-center my-auto py-xl">
         <h1 className="text-2xl font-bold text-ink mb-sm tracking-tight">INVALID LINK</h1>
         <p className="text-sm text-ink-mute">This payment link is invalid or has been cancelled.</p>
-      </div>
-    );
-  }
-
-  if (status === "PROCESSING") {
-    return (
-      <div className="w-full max-w-[448px] bg-canvas-soft border border-hairline rounded-2xl shadow-xl p-xl md:p-xxl text-center animate-in fade-in zoom-in-95 duration-300">
-        <div className="mx-auto mb-lg flex h-16 w-16 items-center justify-center rounded-full bg-primary/5 border border-primary/10">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
-        </div>
-        <p className="micro uppercase tracking-wider text-ink-mute mb-xs">Payment detected</p>
-        <h1 className="text-2xl font-black tracking-tight text-ink">Confirming your payment</h1>
-        <p className="mt-sm text-sm leading-relaxed text-ink-mute">
-          We found a matching payment email and are checking its transaction details. This usually takes a few seconds.
-        </p>
-        <div className="mt-lg rounded-xl border border-hairline bg-canvas px-md py-sm text-left">
-          <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="text-ink-mute">Amount</span>
-            <span className="font-bold text-ink">{formatMoney(amountPaise)}</span>
-          </div>
-          <div className="mt-2 flex items-center justify-between gap-3 text-xs">
-            <span className="text-ink-mute">Status</span>
-            <span className="font-semibold text-primary">Verifying securely…</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => { setStatus("ACTIVE"); setShowUtrForm(true); }}
-          className="mt-lg text-xs font-semibold text-primary underline underline-offset-2 hover:text-primary-deep"
-        >
-          Paid via an app without a note? Enter your UTR instead
-        </button>
       </div>
     );
   }
