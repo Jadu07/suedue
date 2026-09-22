@@ -54,14 +54,13 @@ export default function NewBillPage() {
   const updateSplit = (index: number, field: string, value: any) => {
     const newSplits = [...splits];
     if (field === "amountRupees") {
-      // Derive the sign from the current value so changing -10 to 10
-      // immediately switches the row back to a positive charge.
+      // Keep the sign while typing; stripping it on the first keypress makes
+      // controlled number inputs accept only one digit on mobile Safari.
       const rawStr = String(value).trim();
       const isNegative = rawStr.startsWith("-");
-      const cleaned = rawStr.replace(/^[+-]/, "");
       newSplits[index] = {
         ...newSplits[index],
-        amountRupees: cleaned,
+        amountRupees: rawStr,
         isDeduction: isNegative,
       };
     } else {
@@ -96,6 +95,7 @@ export default function NewBillPage() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-sm">
             <LoaderCircle className="h-6 w-6 animate-spin" />
           </div>
+          <span className="text-sm font-black tracking-tight text-primary">suedue</span>
           <p className="text-sm font-semibold text-ink">Preparing your bill…</p>
           <p className="text-xs text-ink-mute">Just a moment</p>
         </div>
@@ -314,12 +314,12 @@ export default function NewBillPage() {
                   {/* Amount Input & Remove Button */}
                   <div className="flex items-center gap-xs sm:gap-sm flex-nowrap">
                     <div className="relative flex-1 min-w-0 sm:w-36 sm:flex-initial">
-                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${split.isDeduction ? "text-amber-700" : "text-ink-mute"}`}>
-                        {split.isDeduction ? "−₹" : "₹"}
+                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${split.isDeduction ? "text-red-600" : "text-emerald-700"}`}>
+                        ₹
                       </span>
                       <input
-                        type="number"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         required
                         placeholder="0.00"
                         className={`h-11 w-full bg-canvas border rounded-xl pl-7 pr-md text-sm font-mono font-bold focus:outline-none transition ${
@@ -331,6 +331,11 @@ export default function NewBillPage() {
                         }`}
                         value={split.amountRupees}
                         onChange={(e) => updateSplit(idx, "amountRupees", e.target.value)}
+                        onBlur={() => {
+                          if (split.amountRupees.startsWith("+")) {
+                            updateSplit(idx, "amountRupees", split.amountRupees.slice(1));
+                          }
+                        }}
                       />
                     </div>
 
