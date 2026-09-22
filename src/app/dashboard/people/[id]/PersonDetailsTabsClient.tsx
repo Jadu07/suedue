@@ -429,7 +429,7 @@ export default function PersonDetailsTabsClient({
                       disabled={selectedSplits.size === 0 || sendingLink}
                       className="w-full sm:w-auto text-xs font-bold py-2.5 px-4 rounded-xl border border-hairline bg-canvas text-ink hover:bg-canvas-soft active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none transition"
                     >
-                      Update
+                      {selectedHasActiveLink ? "Update" : "Generate"}
                     </button>
                     <button
                       type="button"
@@ -437,7 +437,11 @@ export default function PersonDetailsTabsClient({
                       disabled={selectedSplits.size === 0 || sendingLink}
                       className="w-full sm:w-auto text-xs font-bold py-2.5 px-6 rounded-xl bg-ink text-canvas hover:bg-ink/90 active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none transition shadow-sm"
                     >
-                      {sendingLink ? "Creating link…" : selectedSplits.size > 0 ? "Generate and send" : "Select Bills to Continue"}
+                      {sendingLink
+                        ? "Creating link…"
+                        : selectedSplits.size > 0
+                          ? selectedHasActiveLink ? "Update & Send" : "Generate & Send"
+                          : "Select Bills to Continue"}
                     </button>
                   </div>
                 </div>
