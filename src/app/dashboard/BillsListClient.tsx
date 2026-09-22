@@ -61,17 +61,12 @@ export default function BillsListClient({ initialBills }: { initialBills: any[] 
       </div>
 
       {/* Mobile Top Action (clean minimal button, no repetitive header) */}
-      <div className="md:hidden flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl text-ink font-black tracking-tight">Bills</h1>
-          <p className="text-[11px] text-ink-mute mt-0.5">Your shared expenses</p>
-        </div>
-        <Link
-          href="/dashboard/bills/new"
-          aria-label="Create bill"
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink text-canvas shadow-sm transition active:scale-95"
-        >
-          <Plus className="w-5 h-5" />
+      <div className="md:hidden">
+        <Link href="/dashboard/bills/new" className="block">
+          <button className="w-full flex items-center justify-center gap-2 py-2.5 px-md bg-ink text-canvas active:scale-[0.98] rounded-xl text-xs font-bold transition shadow-sm">
+            <Plus className="w-3.5 h-3.5" />
+            <span>Create Bill</span>
+          </button>
         </Link>
       </div>
 
