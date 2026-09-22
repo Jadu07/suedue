@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toPaise, formatMoney } from "@/lib/money";
-import { Trash2, Plus, ArrowLeft, Users, Calendar, FileText, LoaderCircle } from "lucide-react";
+import { Trash2, Plus, ArrowLeft, Users, Calendar, FileText } from "lucide-react";
 import Link from "next/link";
 import UserAvatar from "@/components/UserAvatar";
 
@@ -18,7 +18,6 @@ export default function NewBillPage() {
   const [splits, setSplits] = useState<{ personId: string; amountRupees: string; isDeduction?: boolean }[]>([]);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
-  const [splashDone, setSplashDone] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const personId = searchParams.get("personId") || "";
@@ -27,7 +26,6 @@ export default function NewBillPage() {
 
   useEffect(() => {
     setPageLoading(true);
-    const splashTimer = window.setTimeout(() => setSplashDone(true), 500);
     fetch("/api/people")
       .then(r => r.json())
       .then(data => {
@@ -43,8 +41,6 @@ export default function NewBillPage() {
       })
       .catch(console.error)
       .finally(() => setPageLoading(false));
-
-    return () => window.clearTimeout(splashTimer);
   }, [personId]);
 
   const addSplit = () => {
@@ -87,21 +83,6 @@ export default function NewBillPage() {
   }, 0);
 
   const liveTotalPaise = positiveTotalPaise - negativeTotalPaise;
-
-  if (!splashDone) {
-    return (
-      <div className="flex min-h-[70dvh] items-center justify-center bg-canvas p-6">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-sm">
-            <LoaderCircle className="h-6 w-6 animate-spin" />
-          </div>
-          <span className="text-sm font-black tracking-tight text-primary">suedue</span>
-          <p className="text-sm font-semibold text-ink">Preparing your bill…</p>
-          <p className="text-xs text-ink-mute">Just a moment</p>
-        </div>
-      </div>
-    );
-  }
 
   if (pageLoading) {
     return (
