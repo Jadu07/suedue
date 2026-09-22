@@ -146,7 +146,7 @@ export default function NewBillPage() {
   };
 
   return (
-    <div className="p-3 sm:p-md md:p-huge max-w-2xl mx-auto space-y-lg pb-8">
+    <div className="p-3 sm:p-md md:p-huge max-w-2xl mx-auto space-y-md pb-8">
       {/* Top Breadcrumb */}
       <div className="flex items-center gap-2">
         <Link 
@@ -158,11 +158,14 @@ export default function NewBillPage() {
         </Link>
       </div>
 
-      <div>
-        <h1 className="display-lg text-ink font-black tracking-tight">Create Bill</h1>
-        <p className="text-xs text-ink-mute mt-0.5">
-          Record a shared expense and assign split amounts to group members.
-        </p>
+      <div className="flex items-start gap-3 rounded-2xl border border-hairline bg-canvas p-4 shadow-2xs">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary">
+          <FileText className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-2xl font-black tracking-tight text-ink">Create bill</h1>
+          <p className="mt-0.5 text-xs text-ink-mute">Add the expense and split it with your people.</p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-lg">
@@ -170,8 +173,8 @@ export default function NewBillPage() {
         <div className="bg-canvas border border-hairline rounded-2xl p-3 sm:p-md md:p-xl space-y-md shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-md">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-ink uppercase tracking-wider mb-1">
-                Bill Title *
+            <label className="block text-[11px] font-bold text-ink uppercase tracking-wider mb-1">
+                Bill title *
               </label>
               <div className="relative">
                 <FileText className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2" />
@@ -187,7 +190,7 @@ export default function NewBillPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-ink uppercase tracking-wider mb-1">
+            <label className="block text-[11px] font-bold text-ink uppercase tracking-wider mb-1">
                 Date *
               </label>
               <div className="relative">
@@ -204,8 +207,8 @@ export default function NewBillPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-ink uppercase tracking-wider mb-1">
-              Description (Optional)
+            <label className="block text-[11px] font-bold text-ink uppercase tracking-wider mb-1">
+              Note <span className="font-medium normal-case tracking-normal text-ink-faint">(optional)</span>
             </label>
             <input
               type="text"
@@ -223,10 +226,10 @@ export default function NewBillPage() {
             <div>
               <h3 className="font-bold text-ink text-sm flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-primary" />
-                <span>Split Breakdown</span>
+                <span>Split breakdown</span>
               </h3>
               <p className="text-[11px] text-ink-mute mt-0.5">
-                Assign how much each person owes for this bill
+                Add who owes what
               </p>
             </div>
             
@@ -236,7 +239,7 @@ export default function NewBillPage() {
               className="inline-flex items-center gap-1 px-3 py-1.5 bg-canvas-soft border border-hairline hover:bg-canvas rounded-xl text-xs font-bold text-ink transition active:scale-95"
             >
               <Plus className="w-3.5 h-3.5 text-primary" />
-              <span>Add Person</span>
+              <span>Add person</span>
             </button>
           </div>
 
@@ -361,8 +364,8 @@ export default function NewBillPage() {
           ) : (
             <div className="p-md bg-canvas rounded-xl border border-hairline flex justify-between items-center mt-md">
               <div>
-                <span className="text-[11px] text-ink-mute uppercase tracking-wider font-bold">Total Bill Amount:</span>
-                <p className="text-xs text-ink-faint">Sum of all individual splits</p>
+                <span className="text-[11px] text-ink-mute uppercase tracking-wider font-bold">Total</span>
+                <p className="text-xs text-ink-faint">From your splits</p>
               </div>
               <div className="text-right">
                 <span className={`text-xl font-black ${liveTotalPaise < 0 ? "text-amber-600" : "text-ink"}`}>
@@ -392,7 +395,7 @@ export default function NewBillPage() {
             disabled={loading || splits.length === 0 || liveTotalPaise === 0} 
             className="btn-primary-dark w-full sm:w-auto text-xs py-2.5 shadow-sm"
           >
-            {loading ? "Creating Bill..." : `Create Bill (${formatMoney(liveTotalPaise)})`}
+            {loading ? "Creating…" : `Create bill · ${formatMoney(liveTotalPaise)}`}
           </Button>
         </div>
       </form>
