@@ -109,6 +109,7 @@
     @apply bg-canvas text-ink font-sans;
     font-weight: 460;
     -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -121,7 +122,18 @@ input,
 select,
 textarea {
   font-size: 16px !important;
+  line-height: 1.25rem;
   -webkit-text-size-adjust: 100%;
+  -webkit-appearance: none;
+}
+
+@media (max-width: 767px) {
+  input:focus,
+  select:focus,
+  textarea:focus {
+    font-size: 16px !important;
+    transform: translateZ(0);
+  }
 }
 
 /* Typography styles based on DESIGN.md */

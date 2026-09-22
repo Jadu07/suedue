@@ -158,13 +158,10 @@ export default function NewBillPage() {
         </Link>
       </div>
 
-      <div className="flex items-start gap-3 rounded-2xl border border-hairline bg-canvas p-4 shadow-2xs">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary">
-          <FileText className="h-5 w-5" />
-        </div>
+      <div className="rounded-2xl border border-hairline bg-canvas p-4 shadow-2xs">
         <div className="min-w-0">
-          <h1 className="text-2xl font-black tracking-tight text-ink">Create bill</h1>
-          <p className="mt-0.5 text-xs text-ink-mute">Add the expense and split it with your people.</p>
+          <h1 className="text-xl font-black tracking-tight text-ink">Create bill</h1>
+          <p className="mt-1 text-xs text-ink-mute">Add an expense and split it with your people.</p>
         </div>
       </div>
 
@@ -253,7 +250,7 @@ export default function NewBillPage() {
                   className="bg-canvas-soft/60 border border-hairline rounded-xl p-3 md:p-md flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 transition hover:border-ink/20"
                 >
                   {/* Person Selector with Avatar */}
-                  <div className="flex-1 flex items-center gap-2">
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
                     {selectedPerson ? (
                       <UserAvatar name={selectedPerson.name} size="sm" />
                     ) : (
