@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toPaise, formatMoney } from "@/lib/money";
-import { Trash2, Plus, ArrowLeft, Users, Calendar, FileText } from "lucide-react";
+import { Trash2, Plus, ArrowLeft, Users, Calendar, FileText, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import UserAvatar from "@/components/UserAvatar";
 
@@ -17,6 +17,7 @@ export default function NewBillPage() {
   // Splits: array of { personId, amountRupees, isDeduction }
   const [splits, setSplits] = useState<{ personId: string; amountRupees: string; isDeduction?: boolean }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
   const personId = searchParams.get("personId") || "";
@@ -37,7 +38,8 @@ export default function NewBillPage() {
           );
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setPageLoading(false));
   }, [personId]);
 
   const addSplit = () => {
@@ -85,6 +87,20 @@ export default function NewBillPage() {
   }, 0);
 
   const liveTotalPaise = positiveTotalPaise - negativeTotalPaise;
+
+  if (pageLoading) {
+    return (
+      <div className="flex min-h-[60dvh] items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-sm">
+            <LoaderCircle className="h-6 w-6 animate-spin" />
+          </div>
+          <p className="text-sm font-semibold text-ink">Preparing your bill</p>
+          <p className="text-xs text-ink-mute">Loading people…</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,7 +195,7 @@ export default function NewBillPage() {
                   type="text"
                   required
                   placeholder="e.g. Dinner at Socials, WiFi Bill, Groceries"
-                  className="w-full bg-canvas text-ink border border-hairline rounded-xl pl-9 pr-md py-2.5 text-xs focus:outline-none focus:border-ink transition font-medium"
+                  className="h-11 w-full bg-canvas text-ink border border-hairline rounded-xl pl-9 pr-md text-sm focus:outline-none focus:border-ink transition font-medium"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
@@ -195,7 +211,7 @@ export default function NewBillPage() {
                 <input
                   type="date"
                   required
-                  className="w-full bg-canvas text-ink border border-hairline rounded-xl pl-9 pr-md py-2.5 text-xs focus:outline-none focus:border-ink transition font-medium"
+                  className="h-11 w-full bg-canvas text-ink border border-hairline rounded-xl pl-9 pr-md text-sm focus:outline-none focus:border-ink transition font-medium"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                 />
@@ -210,7 +226,7 @@ export default function NewBillPage() {
             <input
               type="text"
               placeholder="Add optional notes or item breakdown"
-              className="w-full bg-canvas text-ink border border-hairline rounded-xl px-md py-2 text-xs focus:outline-none focus:border-ink transition font-medium"
+              className="h-11 w-full bg-canvas text-ink border border-hairline rounded-xl px-md text-sm focus:outline-none focus:border-ink transition font-medium"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -260,7 +276,7 @@ export default function NewBillPage() {
                     )}
                     <select
                       required
-                      className="w-full bg-canvas text-ink border border-hairline rounded-xl px-md py-2 text-xs focus:outline-none focus:border-ink transition font-medium cursor-pointer"
+                      className="h-11 w-full bg-canvas text-ink border border-hairline rounded-xl px-md text-sm focus:outline-none focus:border-ink transition font-medium cursor-pointer"
                       value={split.personId}
                       onChange={(e) => updateSplit(idx, "personId", e.target.value)}
                     >
@@ -296,7 +312,7 @@ export default function NewBillPage() {
                         step="0.01"
                         required
                         placeholder="0.00"
-                        className={`w-full bg-canvas text-ink border rounded-xl pl-7 pr-md py-2 text-xs font-mono font-bold focus:outline-none transition ${
+                        className={`h-11 w-full bg-canvas text-ink border rounded-xl pl-7 pr-md text-sm font-mono font-bold focus:outline-none transition ${
                           split.isDeduction ? "border-amber-300 focus:border-amber-500 bg-amber-50/30" : "border-hairline focus:border-ink"
                         }`}
                         value={split.amountRupees}
