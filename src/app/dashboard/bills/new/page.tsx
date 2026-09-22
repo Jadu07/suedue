@@ -18,7 +18,10 @@ export default function NewBillPage() {
   const [splits, setSplits] = useState<{ personId: string; amountRupees: string; isDeduction?: boolean }[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const personId = useSearchParams().get("personId") || "";
+  const searchParams = useSearchParams();
+  const personId = searchParams.get("personId") || "";
+  const requestedReturnTo = searchParams.get("returnTo") || "";
+  const returnTo = requestedReturnTo.startsWith("/dashboard") ? requestedReturnTo : "/dashboard";
 
   useEffect(() => {
     fetch("/api/people")
@@ -132,7 +135,7 @@ export default function NewBillPage() {
         throw new Error(errData.error || "Failed to create bill");
       }
 
-      router.push("/dashboard");
+      router.push(returnTo);
       router.refresh();
     } catch (err: any) {
       console.error(err);
@@ -143,7 +146,7 @@ export default function NewBillPage() {
   };
 
   return (
-    <div className="p-md md:p-huge max-w-2xl mx-auto space-y-lg">
+    <div className="p-3 sm:p-md md:p-huge max-w-2xl mx-auto space-y-lg pb-8">
       {/* Top Breadcrumb */}
       <div className="flex items-center gap-2">
         <Link 
@@ -164,7 +167,7 @@ export default function NewBillPage() {
 
       <form onSubmit={handleSubmit} className="space-y-lg">
         {/* Bill Info Card */}
-        <div className="bg-canvas border border-hairline rounded-2xl p-md md:p-xl space-y-md shadow-sm">
+        <div className="bg-canvas border border-hairline rounded-2xl p-3 sm:p-md md:p-xl space-y-md shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-md">
             <div className="sm:col-span-2">
               <label className="block text-xs font-bold text-ink uppercase tracking-wider mb-1">
@@ -215,7 +218,7 @@ export default function NewBillPage() {
         </div>
 
         {/* Splits Card */}
-        <div className="bg-canvas border border-hairline rounded-2xl p-md md:p-xl space-y-md shadow-sm">
+        <div className="bg-canvas border border-hairline rounded-2xl p-3 sm:p-md md:p-xl space-y-md shadow-sm">
           <div className="flex justify-between items-center pb-xs border-b border-hairline">
             <div>
               <h3 className="font-bold text-ink text-sm flex items-center gap-1.5">
@@ -244,7 +247,7 @@ export default function NewBillPage() {
               return (
                 <div
                   key={idx}
-                  className="bg-canvas-soft/60 border border-hairline rounded-xl p-sm md:p-md flex flex-col sm:flex-row items-stretch sm:items-center gap-sm transition hover:border-ink/20"
+                  className="bg-canvas-soft/60 border border-hairline rounded-xl p-3 md:p-md flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 transition hover:border-ink/20"
                 >
                   {/* Person Selector with Avatar */}
                   <div className="flex-1 flex items-center gap-2">
@@ -269,7 +272,7 @@ export default function NewBillPage() {
                   </div>
 
                   {/* Amount Input, Deduction Toggle & Remove Button */}
-                  <div className="flex items-center gap-xs sm:gap-sm flex-wrap sm:flex-nowrap">
+                  <div className="flex items-center gap-xs sm:gap-sm flex-nowrap">
                     {/* Toggle Charge vs Deduct */}
                     <button
                       type="button"
@@ -284,7 +287,7 @@ export default function NewBillPage() {
                       <span>{split.isDeduction ? "− Deduct" : "+ Charge"}</span>
                     </button>
 
-                    <div className="relative flex-1 sm:w-36 sm:flex-initial">
+                    <div className="relative flex-1 min-w-0 sm:w-36 sm:flex-initial">
                       <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${split.isDeduction ? "text-amber-700" : "text-ink-mute"}`}>
                         {split.isDeduction ? "−₹" : "₹"}
                       </span>

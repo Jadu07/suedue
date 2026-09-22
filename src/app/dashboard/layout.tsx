@@ -1,6 +1,7 @@
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
 import { DesktopNav, MobileBottomNav } from "./DashboardNav";
+import DashboardPullRefresh from "./DashboardPullRefresh";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -28,7 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content */}
       <main className="min-h-0 flex-1 overflow-visible bg-canvas pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
-        {children}
+        <DashboardPullRefresh>{children}</DashboardPullRefresh>
       </main>
 
       {/* Mobile Bottom Nav */}

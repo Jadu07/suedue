@@ -416,7 +416,7 @@ export default function PersonDetailsTabsClient({
 
                   <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
                     <Link
-                      href={`/dashboard/bills/new?personId=${initialPerson._id}`}
+                      href={`/dashboard/bills/new?personId=${initialPerson._id}&returnTo=${encodeURIComponent(`/dashboard/people/${initialPerson._id}`)}`}
                       className="hidden sm:inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-hairline bg-canvas px-4 py-2.5 text-xs font-bold text-ink transition hover:bg-canvas-soft active:scale-[0.98]"
                     >
                       <Plus className="h-3.5 w-3.5" />
