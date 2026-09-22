@@ -18,6 +18,7 @@ export default function NewBillPage() {
   const [splits, setSplits] = useState<{ personId: string; amountRupees: string; isDeduction?: boolean }[]>([]);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [splashDone, setSplashDone] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const personId = searchParams.get("personId") || "";
@@ -25,6 +26,8 @@ export default function NewBillPage() {
   const returnTo = requestedReturnTo.startsWith("/dashboard") ? requestedReturnTo : "/dashboard";
 
   useEffect(() => {
+    setPageLoading(true);
+    const splashTimer = window.setTimeout(() => setSplashDone(true), 500);
     fetch("/api/people")
       .then(r => r.json())
       .then(data => {
@@ -40,6 +43,8 @@ export default function NewBillPage() {
       })
       .catch(console.error)
       .finally(() => setPageLoading(false));
+
+    return () => window.clearTimeout(splashTimer);
   }, [personId]);
 
   const addSplit = () => {
@@ -88,15 +93,38 @@ export default function NewBillPage() {
 
   const liveTotalPaise = positiveTotalPaise - negativeTotalPaise;
 
-  if (pageLoading) {
+  if (!splashDone) {
     return (
-      <div className="flex min-h-[60dvh] items-center justify-center p-6">
+      <div className="flex min-h-[70dvh] items-center justify-center bg-canvas p-6">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-sm">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-sm">
             <LoaderCircle className="h-6 w-6 animate-spin" />
           </div>
-          <p className="text-sm font-semibold text-ink">Preparing your bill</p>
-          <p className="text-xs text-ink-mute">Loading people…</p>
+          <p className="text-sm font-semibold text-ink">Preparing your bill…</p>
+          <p className="text-xs text-ink-mute">Just a moment</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (pageLoading) {
+    return (
+      <div className="p-3 sm:p-md md:p-huge max-w-2xl mx-auto space-y-md animate-pulse">
+        <div className="h-4 w-24 rounded bg-canvas-soft" />
+        <div className="rounded-2xl border border-hairline bg-canvas p-4 space-y-2">
+          <div className="h-6 w-40 rounded bg-canvas-soft" />
+          <div className="h-3 w-64 max-w-full rounded bg-canvas-soft" />
+        </div>
+        <div className="rounded-2xl border border-hairline bg-canvas p-4 space-y-4">
+          <div className="h-3 w-24 rounded bg-canvas-soft" />
+          <div className="h-11 w-full rounded-xl bg-canvas-soft" />
+          <div className="h-11 w-full rounded-xl bg-canvas-soft" />
+          <div className="h-11 w-full rounded-xl bg-canvas-soft" />
+        </div>
+        <div className="rounded-2xl border border-hairline bg-canvas p-4 space-y-4">
+          <div className="h-5 w-36 rounded bg-canvas-soft" />
+          <div className="h-24 w-full rounded-xl bg-canvas-soft" />
+          <div className="h-12 w-full rounded-xl bg-canvas-soft" />
         </div>
       </div>
     );
