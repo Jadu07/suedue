@@ -16,44 +16,75 @@ export const dynamic = "force-dynamic";
 export default async function SettingsPage() {
   await dbConnect();
   
-  const admin = await User.findOne({ role: "ADMIN" });
+  const [admin, yearSetting] = await Promise.all([
+    User.findOne({ role: "ADMIN" }).lean(),
+    AppSetting.findOne({ key: "includeYearInWhatsApp" }).lean(),
+  ]);
   const adminName = admin?.name || "Admin";
   const adminEmail = admin?.email || process.env.DEFAULT_ADMIN_EMAIL || "yashrajchouhan14@gmail.com";
   const openwaUrl = process.env.OPENWA_URL || "https://openwa-0gjr.onrender.com";
   const pythonUrl = process.env.PYTHON_VERIFIER_URL || "http://127.0.0.1:8000";
   const upiId = process.env.NEXT_PUBLIC_UPI_ID || "yashrajchouhan@fam";
-  const yearSetting = await AppSetting.findOne({ key: "includeYearInWhatsApp" }).lean();
   const initialIncludeYear = Boolean(yearSetting?.value);
 
-  // Query all unsettled bills with linked transaction statistics
+  // Fetch unsettled bill statistics in four queries instead of one query per bill.
   const unsettledBillsRaw = await Bill.find({ status: { $ne: "PAID" } }).sort({ createdAt: -1 }).lean();
+  const billIds = unsettledBillsRaw.map((b) => b._id);
+  const splits = billIds.length
+    ? await Split.find({ billId: { $in: billIds } }).select("_id billId").lean()
+    : [];
+  const splitIds = splits.map((s: any) => s._id);
+  const [transactions, requests] = billIds.length
+    ? await Promise.all([
+        PaymentTransaction.find({
+          $or: [{ billId: { $in: billIds } }, { splitId: { $in: splitIds } }],
+        })
+          .select("billId splitId amountPaise")
+          .lean(),
+        PaymentRequest.find({
+          $or: [
+            { billId: { $in: billIds } },
+            { splitId: { $in: splitIds } },
+            { splitIds: { $in: splitIds } },
+          ],
+        })
+          .select("billId splitId splitIds")
+          .lean(),
+      ])
+    : [[], []];
 
-  const serializedUnsettledBills: UnsettledBillItem[] = await Promise.all(
-    unsettledBillsRaw.map(async (b: any) => {
-      const splits = await Split.find({ billId: b._id }).lean();
-      const splitIds = splits.map((s) => s._id);
-      const txs = await PaymentTransaction.find({
-        $or: [{ billId: b._id }, { splitId: { $in: splitIds } }]
-      }).lean();
-      const txAmountPaise = txs.reduce((sum: number, t: any) => sum + (t.amountPaise || 0), 0);
-      const reqCount = await PaymentRequest.countDocuments({
-        $or: [{ billId: b._id }, { splitId: { $in: splitIds } }, { splitIds: { $in: splitIds } }]
-      });
+  const splitIdsByBill = new Map<string, Set<string>>();
+  for (const split of splits as any[]) {
+    const billId = split.billId.toString();
+    if (!splitIdsByBill.has(billId)) splitIdsByBill.set(billId, new Set());
+    splitIdsByBill.get(billId)!.add(split._id.toString());
+  }
 
-      return {
-        _id: b._id.toString(),
-        title: b.title,
-        description: b.description || "",
-        date: b.date ? b.date.toISOString() : b.createdAt.toISOString(),
-        totalAmountPaise: b.totalAmountPaise,
-        status: b.status,
-        splitsCount: splits.length,
-        transactionsCount: txs.length,
-        transactionsAmountPaise: txAmountPaise,
-        requestsCount: reqCount
-      };
-    })
-  );
+  const serializedUnsettledBills: UnsettledBillItem[] = unsettledBillsRaw.map((b: any) => {
+    const billId = b._id.toString();
+    const billSplitIds = splitIdsByBill.get(billId) || new Set<string>();
+    const billTransactions = (transactions as any[]).filter((t) =>
+      t.billId?.toString() === billId || (t.splitId && billSplitIds.has(t.splitId.toString()))
+    );
+    const requestsCount = (requests as any[]).filter((r) =>
+      r.billId?.toString() === billId ||
+      (r.splitId && billSplitIds.has(r.splitId.toString())) ||
+      (r.splitIds || []).some((id: any) => billSplitIds.has(id.toString()))
+    ).length;
+
+    return {
+      _id: billId,
+      title: b.title,
+      description: b.description || "",
+      date: b.date ? b.date.toISOString() : b.createdAt.toISOString(),
+      totalAmountPaise: b.totalAmountPaise,
+      status: b.status,
+      splitsCount: billSplitIds.size,
+      transactionsCount: billTransactions.length,
+      transactionsAmountPaise: billTransactions.reduce((sum, t) => sum + (t.amountPaise || 0), 0),
+      requestsCount,
+    };
+  });
 
   return (
     <div className="p-md md:p-huge max-w-4xl mx-auto space-y-lg">

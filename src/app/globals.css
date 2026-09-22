@@ -108,11 +108,20 @@
   body {
     @apply bg-canvas text-ink font-sans;
     font-weight: 460;
+    -webkit-text-size-adjust: 100%;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
   }
+}
+
+/* Keep form controls readable and prevent iOS/PWA focus zoom. */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Typography styles based on DESIGN.md */

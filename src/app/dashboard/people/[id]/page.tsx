@@ -16,11 +16,11 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
   
   Bill; Person;
 
-  // Run all queries in parallel with lean documents for instant loading
-  const [person, allSplits, allVerifiedPayments, rawActiveRequests] = await Promise.all([
+  // Load only this person's core records first. Payments are scoped to their
+  // splits below instead of scanning every verified payment in the database.
+  const [person, allSplits, rawActiveRequests] = await Promise.all([
     Person.findById(id).lean(),
     Split.find({ personId: id }).populate("billId").sort({ createdAt: -1 }).lean(),
-    PaymentTransaction.find({ status: "VERIFIED" }).lean(),
     PaymentRequest.find({ personId: id, status: "ACTIVE" }).sort({ createdAt: -1 }).lean(),
   ]);
 
@@ -40,6 +40,14 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       </div>
     );
   }
+
+  const splitIds = allSplits.map((split) => split._id);
+  const allVerifiedPayments = splitIds.length
+    ? await PaymentTransaction.find({
+        status: "VERIFIED",
+        splitId: { $in: splitIds },
+      }).lean()
+    : [];
 
   // Pre-index verified payments by splitId (0ms in-memory lookup)
   const splitPaidMap = new Map<string, number>();

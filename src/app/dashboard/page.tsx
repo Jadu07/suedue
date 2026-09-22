@@ -7,7 +7,10 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   await dbConnect();
   
-  const bills = await Bill.find().sort({ createdAt: -1 }).lean();
+  const bills = await Bill.find()
+    .select("title description date totalAmountPaise status createdAt")
+    .sort({ createdAt: -1 })
+    .lean();
 
   const serializableBills = bills.map((b: any) => ({
     _id: b._id.toString(),

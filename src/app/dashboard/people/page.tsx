@@ -12,13 +12,23 @@ export default async function PeoplePage() {
 
   // Fetch all in parallel with lean documents for maximum speed
   const [people, allSplits, verifiedPayments, activeRequests] = await Promise.all([
-    Person.find().sort({ createdAt: -1 }).lean(),
-    Split.find({ status: { $ne: "CANCELLED" } }).lean(),
-    PaymentTransaction.find({ status: "VERIFIED" }).lean(),
+    Person.find()
+      .select("name phone email notes isActive createdAt")
+      .sort({ createdAt: -1 })
+      .lean(),
+    Split.find({ status: { $ne: "CANCELLED" } })
+      .select("_id personId status originalAmountPaise")
+      .lean(),
+    PaymentTransaction.find({ status: "VERIFIED" })
+      .select("splitId amountPaise")
+      .lean(),
     PaymentRequest.find({
       status: "ACTIVE",
       expiresAt: { $gt: new Date() }
-    }).sort({ createdAt: -1 }).lean(),
+    })
+      .select("_id personId rawToken refCode secureTokenHash requestedAmountPaise expiresAt createdAt")
+      .sort({ createdAt: -1 })
+      .lean(),
   ]);
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000";
