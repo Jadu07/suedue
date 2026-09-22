@@ -137,18 +137,18 @@ export default function PersonDetailsTabsClient({
     }
   };
 
-  const handleSendSelected = async () => {
+  const handleGenerateLink = async (sendWhatsApp = true) => {
     if (selectedSplits.size === 0) return alert("Select at least one bill.");
     const hasActive = pendingSplits.some((s: any) => selectedSplits.has(s.splitId) && s.hasActiveLink);
     if (hasActive) {
-      if (!confirm("An active payment link already exists for one or more selected bills. Generating a new link will supersede it. Proceed?")) return;
+      if (!confirm("This will expire the old active link and create a replacement. Continue?")) return;
     }
     setSendingLink(true);
     try {
       const res = await fetch('/api/whatsapp/send-selected', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ personId: initialPerson._id, splitIds: Array.from(selectedSplits) })
+        body: JSON.stringify({ personId: initialPerson._id, splitIds: Array.from(selectedSplits), sendWhatsApp })
       });
       const data = await res.json();
       if (data.success) {
@@ -163,7 +163,7 @@ export default function PersonDetailsTabsClient({
         router.refresh();
         setActiveTab("active_links");
       } else {
-        alert(data.error || "Failed to send");
+        alert(data.error || "Failed to create payment link");
       }
     } catch (err) {
       alert("Error sending message");
@@ -175,6 +175,7 @@ export default function PersonDetailsTabsClient({
   const totalSelected = pendingSplits
     .filter((s: any) => selectedSplits.has(s.splitId))
     .reduce((acc: number, s: any) => acc + s.remainingPaise, 0);
+  const selectedHasActiveLink = pendingSplits.some((s: any) => selectedSplits.has(s.splitId) && s.hasActiveLink);
 
   const tabs: {
     id: "pending" | "active_links" | "history" | "profile";
@@ -424,15 +425,23 @@ export default function PersonDetailsTabsClient({
                     </Link>
                     <button
                       type="button"
-                      onClick={handleSendSelected}
+                      onClick={() => handleGenerateLink(true)}
                       disabled={selectedSplits.size === 0 || sendingLink}
                       className="w-full sm:w-auto text-xs font-bold py-2.5 px-6 rounded-xl bg-ink text-canvas hover:bg-ink/90 active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none transition shadow-sm"
                     >
                       {sendingLink
-                        ? "Generating Link..."
+                        ? "Creating link…"
                         : selectedSplits.size > 0
-                          ? "Generate Payment Link"
+                          ? selectedHasActiveLink ? "Update & send link" : "Generate & send link"
                           : "Select Bills to Continue"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateLink(false)}
+                      disabled={selectedSplits.size === 0 || sendingLink}
+                      className="w-full sm:w-auto text-xs font-bold py-2.5 px-4 rounded-xl border border-hairline bg-canvas text-ink hover:bg-canvas-soft active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none transition"
+                    >
+                      {selectedHasActiveLink ? "Update link only" : "Create link only"}
                     </button>
                   </div>
                 </div>

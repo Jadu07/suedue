@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   try {
     await dbConnect();
     Bill; Person;
-    const { personId, splitIds } = await req.json();
+    const { personId, splitIds, sendWhatsApp = true } = await req.json();
 
     if (!splitIds || splitIds.length === 0) {
       return NextResponse.json({ error: "No splits selected." }, { status: 400 });
@@ -101,6 +101,20 @@ ${splitDetails.join("\n")}
 ${paymentLink}
 
 _Powered by suedue_`;
+
+    // Link-only mode is used when the owner wants to replace an active link
+    // and share it manually later. Old active links were already cancelled
+    // before this request was created.
+    if (!sendWhatsApp) {
+      return NextResponse.json({
+        success: true,
+        paymentLink,
+        rawToken,
+        refCode: payReq.refCode,
+        messageText,
+        sent: false,
+      });
+    }
 
     const waMsg = await WhatsAppMessage.create({
       personId: person._id,
