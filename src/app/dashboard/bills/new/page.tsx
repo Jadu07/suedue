@@ -68,12 +68,6 @@ export default function NewBillPage() {
     setSplits(newSplits);
   };
 
-  const toggleDeduction = (index: number) => {
-    const newSplits = [...splits];
-    newSplits[index] = { ...newSplits[index], isDeduction: !newSplits[index].isDeduction };
-    setSplits(newSplits);
-  };
-
   const removeSplit = (index: number) => {
     setSplits(splits.filter((_, i) => i !== index));
   };
@@ -315,22 +309,8 @@ export default function NewBillPage() {
                     </select>
                   </div>
 
-                  {/* Amount Input, Deduction Toggle & Remove Button */}
+                  {/* Amount Input & Remove Button */}
                   <div className="flex items-center gap-xs sm:gap-sm flex-nowrap">
-                    {/* Toggle Charge vs Deduct */}
-                    <button
-                      type="button"
-                      onClick={() => toggleDeduction(idx)}
-                      className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition flex items-center gap-1 shrink-0 ${
-                        split.isDeduction
-                          ? "bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200"
-                          : "bg-canvas text-ink border border-hairline hover:bg-canvas-soft"
-                      }`}
-                      title={split.isDeduction ? "Switched to Deduction (-). Click to change to Charge (+)" : "Switched to Charge (+). Click to change to Deduction (-)"}
-                    >
-                      <span>{split.isDeduction ? "− Deduct" : "+ Charge"}</span>
-                    </button>
-
                     <div className="relative flex-1 min-w-0 sm:w-36 sm:flex-initial">
                       <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${split.isDeduction ? "text-amber-700" : "text-ink-mute"}`}>
                         {split.isDeduction ? "−₹" : "₹"}
@@ -340,8 +320,12 @@ export default function NewBillPage() {
                         step="0.01"
                         required
                         placeholder="0.00"
-                        className={`h-11 w-full bg-canvas text-ink border rounded-xl pl-7 pr-md text-sm font-mono font-bold focus:outline-none transition ${
-                          split.isDeduction ? "border-amber-300 focus:border-amber-500 bg-amber-50/30" : "border-hairline focus:border-ink"
+                        className={`h-11 w-full bg-canvas border rounded-xl pl-7 pr-md text-sm font-mono font-bold focus:outline-none transition ${
+                          split.isDeduction
+                            ? "border-red-200 bg-red-50/40 text-red-600 focus:border-red-500"
+                            : split.amountRupees
+                              ? "border-emerald-200 bg-emerald-50/40 text-emerald-700 focus:border-emerald-500"
+                              : "border-hairline text-ink focus:border-ink"
                         }`}
                         value={split.amountRupees}
                         onChange={(e) => updateSplit(idx, "amountRupees", e.target.value)}
