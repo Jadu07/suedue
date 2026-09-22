@@ -69,6 +69,13 @@ export default function NewBillPage() {
     setSplits(splits.filter((_, i) => i !== index));
   };
 
+  const toggleAmountSign = (index: number) => {
+    const current = splits[index]?.amountRupees.trim() || "";
+    const magnitude = current.replace(/^[+-]/, "");
+    if (!magnitude) return;
+    updateSplit(index, "amountRupees", current.startsWith("-") ? magnitude : `-${magnitude}`);
+  };
+
   // Calculate live positive, negative, and net totals
   const positiveTotalPaise = splits.reduce((acc, s) => {
     if (s.isDeduction) return acc;
@@ -294,6 +301,19 @@ export default function NewBillPage() {
 
                   {/* Amount Input & Remove Button */}
                   <div className="flex items-center gap-xs sm:gap-sm flex-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => toggleAmountSign(idx)}
+                      disabled={!split.amountRupees || split.amountRupees === "-" || split.amountRupees === "+"}
+                      aria-label={split.isDeduction ? "Make amount positive" : "Make amount negative"}
+                      className={`h-8 w-8 shrink-0 rounded-lg border text-sm font-black transition active:scale-95 disabled:opacity-30 ${
+                        split.isDeduction
+                          ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                          : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                      }`}
+                    >
+                      {split.isDeduction ? "+" : "−"}
+                    </button>
                     <div className="relative flex-1 min-w-0 sm:w-36 sm:flex-initial">
                       <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${split.isDeduction ? "text-red-600" : "text-emerald-700"}`}>
                         ₹
