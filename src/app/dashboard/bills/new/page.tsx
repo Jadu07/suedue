@@ -54,14 +54,16 @@ export default function NewBillPage() {
   const updateSplit = (index: number, field: string, value: any) => {
     const newSplits = [...splits];
     if (field === "amountRupees") {
-      // If user typed negative sign or negative number, auto-toggle deduction
-      const rawStr = String(value);
-      if (rawStr.startsWith("-")) {
-        const cleaned = rawStr.replace(/^-/, "");
-        newSplits[index] = { ...newSplits[index], amountRupees: cleaned, isDeduction: true };
-      } else {
-        newSplits[index] = { ...newSplits[index], [field]: value };
-      }
+      // Derive the sign from the current value so changing -10 to 10
+      // immediately switches the row back to a positive charge.
+      const rawStr = String(value).trim();
+      const isNegative = rawStr.startsWith("-");
+      const cleaned = rawStr.replace(/^[+-]/, "");
+      newSplits[index] = {
+        ...newSplits[index],
+        amountRupees: cleaned,
+        isDeduction: isNegative,
+      };
     } else {
       newSplits[index] = { ...newSplits[index], [field]: value };
     }
