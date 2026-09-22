@@ -306,7 +306,7 @@ export default function NewBillPage() {
                       onClick={() => toggleAmountSign(idx)}
                       disabled={!split.amountRupees || split.amountRupees === "-" || split.amountRupees === "+"}
                       aria-label={split.isDeduction ? "Make amount positive" : "Make amount negative"}
-                      className={`h-8 w-8 shrink-0 rounded-lg border text-sm font-black transition active:scale-95 disabled:opacity-30 ${
+                      className={`h-8 w-8 shrink-0 rounded-full border text-sm font-black transition active:scale-95 disabled:opacity-30 ${
                         split.isDeduction
                           ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
                           : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"

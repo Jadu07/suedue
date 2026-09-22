@@ -192,7 +192,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           <Link
             href={`/dashboard/bills/new?personId=${person._id}&returnTo=${encodeURIComponent(`/dashboard/people/${person._id}`)}`}
             aria-label={`Add bill for ${person.name}`}
-            className="sm:hidden inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm transition active:scale-95"
+            className="sm:hidden inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary text-on-primary shadow-sm transition active:scale-95"
           >
             <Plus className="h-5 w-5" />
           </Link>
