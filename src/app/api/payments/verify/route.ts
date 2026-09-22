@@ -42,6 +42,8 @@ async function verifyPayments() {
 
     const pythonUrl = process.env.PYTHON_VERIFIER_URL || "http://127.0.0.1:8000";
     let matches: Record<string, any> = {};
+    let processingIds = new Set<string>();
+    let verifierResponded = false;
 
     try {
       const pyRes = await axios.post(`${pythonUrl}/verify-batch`, {
@@ -52,14 +54,32 @@ async function verifyPayments() {
       if (pyRes.data && pyRes.data.matches) {
         matches = pyRes.data.matches;
       }
+      processingIds = new Set<string>(pyRes.data?.processing || []);
+      verifierResponded = true;
     } catch (batchErr: any) {
       console.warn("Batch verify failed, falling back to single verify:", batchErr?.message);
     }
 
     let verifiedCount = 0;
+    let processingCount = 0;
 
     for (const pr of pendingRequests) {
-      const match = matches[pr._id.toString()];
+      const requestId = pr._id.toString();
+      if (verifierResponded && processingIds.has(requestId)) {
+        if (pr.verificationStatus !== "PROCESSING") {
+          pr.verificationStatus = "PROCESSING";
+          await pr.save();
+        }
+        processingCount++;
+        continue;
+      }
+
+      if (verifierResponded && pr.verificationStatus === "PROCESSING") {
+        pr.verificationStatus = "IDLE";
+        await pr.save();
+      }
+
+      const match = matches[requestId];
       if (!match || match.status !== "VERIFIED") continue;
 
       const session = await mongoose.startSession();
@@ -121,6 +141,7 @@ async function verifyPayments() {
         }
 
         pr.status = "COMPLETED";
+        pr.verificationStatus = "VERIFIED";
         await pr.save({ session });
         
         await session.commitTransaction();
@@ -135,7 +156,7 @@ async function verifyPayments() {
       }
     }
 
-    return NextResponse.json({ success: true, verifiedCount });
+    return NextResponse.json({ success: true, verifiedCount, processingCount });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

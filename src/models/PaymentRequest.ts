@@ -15,6 +15,11 @@ const PaymentRequestSchema = new mongoose.Schema(
       enum: ["ACTIVE", "EXPIRED", "COMPLETED", "CANCELLED"],
       default: "ACTIVE",
     },
+    verificationStatus: {
+      type: String,
+      enum: ["IDLE", "PROCESSING", "VERIFIED"],
+      default: "IDLE",
+    },
     userProvidedUtr: { type: String, default: null },
     refCode: { type: String, uppercase: true, trim: true },
     rawToken: { type: String },
