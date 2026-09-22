@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { formatMoney } from "@/lib/money";
 import { 
   Clock, 
@@ -12,7 +13,8 @@ import {
   Check, 
   MessageSquare, 
   ExternalLink,
-  X
+  X,
+  Plus
 } from "lucide-react";
 
 export default function PersonDetailsTabsClient({ 
@@ -412,18 +414,27 @@ export default function PersonDetailsTabsClient({
                     <span className="font-black text-ink text-2xl tracking-tight mt-0.5">{formatMoney(totalSelected)}</span>
                   </div>
 
-                  <button 
-                    type="button"
-                    onClick={handleSendSelected} 
-                    disabled={selectedSplits.size === 0 || sendingLink}
-                    className="w-full sm:w-auto text-xs font-bold py-2.5 px-6 rounded-xl bg-ink text-canvas hover:bg-ink/90 active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none transition shadow-sm"
-                  >
-                    {sendingLink 
-                      ? "Generating Link..." 
-                      : selectedSplits.size > 0 
-                        ? "Generate Payment Link"
-                        : "Select Bills to Continue"}
-                  </button>
+                  <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+                    <Link
+                      href={`/dashboard/bills/new?personId=${initialPerson._id}`}
+                      className="hidden sm:inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-hairline bg-canvas px-4 py-2.5 text-xs font-bold text-ink transition hover:bg-canvas-soft active:scale-[0.98]"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Add Bill</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleSendSelected}
+                      disabled={selectedSplits.size === 0 || sendingLink}
+                      className="w-full sm:w-auto text-xs font-bold py-2.5 px-6 rounded-xl bg-ink text-canvas hover:bg-ink/90 active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none transition shadow-sm"
+                    >
+                      {sendingLink
+                        ? "Generating Link..."
+                        : selectedSplits.size > 0
+                          ? "Generate Payment Link"
+                          : "Select Bills to Continue"}
+                    </button>
+                  </div>
                 </div>
               </>
             )}

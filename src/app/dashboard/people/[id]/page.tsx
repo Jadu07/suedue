@@ -8,7 +8,7 @@ import PersonDetailsTabsClient from "./PersonDetailsTabsClient";
 import UserAvatar from "@/components/UserAvatar";
 import { formatMoney } from "@/lib/money";
 import Link from "next/link";
-import { ArrowLeft, Phone, Mail } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Plus } from "lucide-react";
 
 export default async function PersonPage({ params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
@@ -172,13 +172,22 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
 
-        <div className="sm:text-right shrink-0 border-t border-hairline sm:border-0 pt-3 sm:pt-0">
-          <span className="text-[10px] text-ink-mute uppercase tracking-wider font-semibold block">
-            {totalPendingPaise > 0 ? "Total Dues" : "Status"}
-          </span>
-          <p className="text-lg sm:text-2xl font-black text-ink tracking-tight mt-0.5">
-            {totalPendingPaise > 0 ? formatMoney(totalPendingPaise) : "Settled"}
-          </p>
+        <div className="sm:text-right shrink-0 border-t border-hairline sm:border-0 pt-3 sm:pt-0 flex items-center justify-between sm:block">
+          <div>
+            <span className="text-[10px] text-ink-mute uppercase tracking-wider font-semibold block">
+              {totalPendingPaise > 0 ? "Total Dues" : "Status"}
+            </span>
+            <p className="text-lg sm:text-2xl font-black text-ink tracking-tight mt-0.5">
+              {totalPendingPaise > 0 ? formatMoney(totalPendingPaise) : "Settled"}
+            </p>
+          </div>
+          <Link
+            href={`/dashboard/bills/new?personId=${person._id}`}
+            aria-label={`Add bill for ${person.name}`}
+            className="sm:hidden inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm transition active:scale-95"
+          >
+            <Plus className="h-5 w-5" />
+          </Link>
         </div>
       </div>
 

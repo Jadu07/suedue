@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toPaise, formatMoney } from "@/lib/money";
 import { Trash2, Plus, ArrowLeft, Users, Calendar, FileText } from "lucide-react";
@@ -18,6 +18,7 @@ export default function NewBillPage() {
   const [splits, setSplits] = useState<{ personId: string; amountRupees: string; isDeduction?: boolean }[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const personId = useSearchParams().get("personId") || "";
 
   useEffect(() => {
     fetch("/api/people")
@@ -26,12 +27,15 @@ export default function NewBillPage() {
         const pList = data.people || [];
         setPeople(pList);
         // Start with one empty split by default
-        if (splits.length === 0 && pList.length > 0) {
-          setSplits([{ personId: "", amountRupees: "", isDeduction: false }]);
+        if (pList.length > 0) {
+          setSplits(current => current.length === 0
+            ? [{ personId, amountRupees: "", isDeduction: false }]
+            : current
+          );
         }
       })
       .catch(console.error);
-  }, []);
+  }, [personId]);
 
   const addSplit = () => {
     setSplits([...splits, { personId: "", amountRupees: "", isDeduction: false }]);
