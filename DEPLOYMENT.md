@@ -69,7 +69,7 @@ Use **New + -> Blueprint**, select this repository, and apply the root `render.y
 - Build command: `pip install -r requirements.txt`
 - Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 - Health check: `/health`
-- Plan: Starter recommended for a continuously connected IMAP listener
+- Plan: Free selected; the service may sleep after inactivity
 
 Set these Render environment variables:
 
@@ -105,7 +105,7 @@ Expected results:
 ## Production risks and decisions
 
 - The verifier cache is in RAM. A Render restart clears it, then the service rebuilds the cache from recent Gmail messages. It is not a durable payment ledger; MongoDB remains the source of truth.
-- Render Free can sleep or restart, which is unsuitable for reliable IMAP IDLE. Use Starter or another always-on plan.
+- Render Free can sleep or restart, so Gmail verification may be delayed until the service wakes and reconnects. Upgrade to an always-on plan if real-time verification becomes necessary.
 - MongoDB Atlas must allow Vercel's dynamic outbound IPs. Use the narrowest practical network policy supported by your Atlas plan; `0.0.0.0/0` is functional but broad.
 - The shared secret protects Python verification endpoints from arbitrary public callers. `/health` remains public so Render can probe it.
 - `POST /api/payments/verify` is intentionally callable by the public payment page, so it should be rate-limited or redesigned around a payment-token-scoped verification request before treating it as a hardened public API.
