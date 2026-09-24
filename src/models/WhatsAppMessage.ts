@@ -16,4 +16,7 @@ const WhatsAppMessageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+WhatsAppMessageSchema.index({ billId: 1 });
+WhatsAppMessageSchema.index({ splitId: 1 });
+
 export const WhatsAppMessage = mongoose.models.WhatsAppMessage || mongoose.model("WhatsAppMessage", WhatsAppMessageSchema);

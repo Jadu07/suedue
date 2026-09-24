@@ -16,4 +16,7 @@ const BillSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+BillSchema.index({ createdAt: -1 });
+BillSchema.index({ status: 1, createdAt: -1 });
+
 export const Bill = mongoose.models.Bill || mongoose.model("Bill", BillSchema);

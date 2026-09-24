@@ -11,4 +11,7 @@ const PersonSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+PersonSchema.index({ createdAt: -1 });
+PersonSchema.index({ isActive: 1, name: 1 });
+
 export const Person = mongoose.models.Person || mongoose.model("Person", PersonSchema);

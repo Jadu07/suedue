@@ -27,4 +27,10 @@ const PaymentTransactionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+PaymentTransactionSchema.index({ splitId: 1, status: 1 });
+PaymentTransactionSchema.index({ billId: 1, status: 1 });
+PaymentTransactionSchema.index({ status: 1, utr: 1 });
+PaymentTransactionSchema.index({ createdAt: -1 });
+PaymentTransactionSchema.index({ paymentRequestId: 1, status: 1, paymentTime: -1 });
+
 export const PaymentTransaction = mongoose.models.PaymentTransaction || mongoose.model("PaymentTransaction", PaymentTransactionSchema);

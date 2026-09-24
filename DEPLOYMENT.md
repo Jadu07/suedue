@@ -111,6 +111,12 @@ Expected results:
 - `POST /api/payments/verify` is intentionally callable by the public payment page, so it should be rate-limited or redesigned around a payment-token-scoped verification request before treating it as a hardened public API.
 - OpenWA remains an independent dependency. WhatsApp sending can fail even when Vercel, Render, MongoDB, and Gmail are healthy.
 
+## MongoDB performance
+
+The Mongoose models define indexes for payment-token lookups, splits by bill/person, verified transactions by split/bill, payment-request status queries, and dashboard date sorting. Deploy the latest commit and allow the first database connection to finish building the indexes.
+
+To verify them in MongoDB Atlas, open the cluster's **Indexes** tab and confirm the indexes exist on `splits`, `paymenttransactions`, `paymentrequests`, `bills`, `people`, and `whatsappmessages`. Indexes improve reads but consume storage and add a small write cost; review query plans with `explain("executionStats")` before adding more.
+
 ## Local development
 
 Keep a local-only `env.local` with:

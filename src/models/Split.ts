@@ -15,4 +15,8 @@ const SplitSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+SplitSchema.index({ billId: 1 });
+SplitSchema.index({ personId: 1, createdAt: -1 });
+SplitSchema.index({ personId: 1, status: 1 });
+
 export const Split = mongoose.models.Split || mongoose.model("Split", SplitSchema);
