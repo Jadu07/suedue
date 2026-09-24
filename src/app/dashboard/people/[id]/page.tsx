@@ -112,7 +112,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         }
       }
     }
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000";
+    const appUrl = process.env.APP_URL || "http://127.0.0.1:3000";
     const paymentLink = req.rawToken ? `${appUrl}/pay/${req.rawToken}` : `${appUrl}/pay/${req._id.toString()}`;
     activeRequestsData.push({
       id: req._id.toString(),

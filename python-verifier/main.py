@@ -177,7 +177,7 @@ def sync_recent_transactions(client: IMAPClient) -> None:
 
 def trigger_nextjs_verify_webhook():
     """Fires internal webhook to Next.js immediately when a new email arrives."""
-    app_url = os.getenv("NEXT_PUBLIC_APP_URL", "http://127.0.0.1:3000")
+    app_url = os.getenv("APP_URL", "http://127.0.0.1:3000")
     try:
         req = urllib.request.Request(f"{app_url}/api/payments/verify", method="POST", data=b"{}")
         req.add_header("Content-Type", "application/json")

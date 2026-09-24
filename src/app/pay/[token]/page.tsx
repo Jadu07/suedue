@@ -125,7 +125,7 @@ export default async function PublicPaymentPage({ params }: { params: Promise<{ 
     await payReq.save();
   }
 
-  const payeeName = process.env.NEXT_PUBLIC_PAYEE_NAME || "Yashraj Chouhan";
+  const payeeName = process.env.PAYEE_NAME || "Yashraj Chouhan";
 
   return (
     <div className="min-h-screen bg-canvas flex flex-col p-md md:p-huge items-center justify-center">

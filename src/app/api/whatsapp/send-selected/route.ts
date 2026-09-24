@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
     });
 
-    const paymentLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000"}/pay/${rawToken}`;
+    const paymentLink = `${process.env.APP_URL || "http://127.0.0.1:3000"}/pay/${rawToken}`;
     
     // Compose clean message with date on right side of bill
     const messageText = `Hi *${person.name}*,

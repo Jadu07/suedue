@@ -47,18 +47,18 @@ Add these Production environment variables:
 | --- | --- | --- |
 | `MONGODB_URI` | Yes | MongoDB Atlas connection string |
 | `AUTH_SECRET` | Yes | New random secret, at least 32 characters |
-| `NEXT_PUBLIC_APP_URL` | Yes | Canonical Vercel URL, no trailing slash |
+| `APP_URL` | Yes | `https://suedue.vercel.app` |
 | `NEXT_PUBLIC_UPI_ID` | Yes | Receiving UPI ID |
-| `NEXT_PUBLIC_PAYEE_NAME` | Recommended | Payee name shown in payment UI |
+| `PAYEE_NAME` | Recommended | Payee name shown in payment UI |
 | `OPENWA_URL` | If WhatsApp is used | OpenWA / WAHA base URL |
 | `OPENWA_API_KEY` | If WhatsApp is used | OpenWA / WAHA API key |
 | `OPENWA_SESSION_ID` | If WhatsApp is used | WhatsApp session ID |
-| `PYTHON_VERIFIER_URL` | After Render deploy | Render verifier URL, no trailing slash |
+| `PYTHON_VERIFIER_URL` | Yes | `https://suedue-verifier-lsh3.onrender.com` |
 | `VERIFIER_SHARED_SECRET` | Yes | Same random secret configured on Render |
 
 `FAMPAY_GMAIL` and `FAMPAY_GMAIL_APP_PASSWORD` belong only on Render. Do not add them to Vercel.
 
-Deploy once to obtain the canonical Vercel URL. The verifier URL can be filled after step 2; the app may show verifier errors until then, but the Next.js build does not require the Python service.
+The production URLs are already known, so set both URLs before the next Vercel redeploy.
 
 ### 2. Deploy only the verifier to Render
 
@@ -77,20 +77,20 @@ Set these Render environment variables:
 | --- | --- | --- |
 | `FAMPAY_GMAIL` | Yes | Gmail inbox receiving FamPay receipts |
 | `FAMPAY_GMAIL_APP_PASSWORD` | Yes | Google App Password, not the Gmail login password |
-| `NEXT_PUBLIC_APP_URL` | Yes | Vercel production URL, no trailing slash |
+| `APP_URL` | Yes | `https://suedue.vercel.app` |
 | `VERIFIER_SHARED_SECRET` | Yes | Exactly the same value as Vercel |
 | `PYTHON_VERSION` | No | `3.11.9` |
 
-After Render deploys, copy its public URL into Vercel as `PYTHON_VERIFIER_URL`, then redeploy Vercel. If a custom domain is used, update `NEXT_PUBLIC_APP_URL` on both services to the final canonical URL.
+After changing the variables, redeploy Vercel. If a custom domain is used later, update `APP_URL` on both services to that final canonical URL.
 
 ## Smoke tests
 
 Run these after both services are deployed:
 
 ```bash
-curl -i https://<verifier>.onrender.com/health
-curl -i https://<vercel-app>/api/health
-curl -i -X POST https://<verifier>.onrender.com/verify-batch \
+curl -i https://suedue-verifier-lsh3.onrender.com/health
+curl -i https://suedue.vercel.app/api/health
+curl -i -X POST https://suedue-verifier-lsh3.onrender.com/verify-batch \
   -H 'Content-Type: application/json' \
   -d '{"requests":[]}'
 ```
@@ -118,7 +118,7 @@ Keep a local-only `env.local` with:
 ```dotenv
 PYTHON_VERIFIER_URL=http://127.0.0.1:8000
 VERIFIER_SHARED_SECRET=local-development-secret
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+APP_URL=http://localhost:3000
 ```
 
 Start the verifier from `python-verifier` and the Next.js app from the repository root. The same shared secret must be present in both local processes.

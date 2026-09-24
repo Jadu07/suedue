@@ -15,15 +15,3 @@ export function formatMoney(paise: number): string {
     maximumFractionDigits: 2,
   }).format(rupees);
 }
-
-export function addMoney(a: number, b: number): number {
-  return a + b; // Assuming inputs are in paise and integers
-}
-
-export function subtractMoney(a: number, b: number): number {
-  return a - b;
-}
-
-export function validateMoney(paise: number): boolean {
-  return Number.isInteger(paise) && paise >= 0;
-}
