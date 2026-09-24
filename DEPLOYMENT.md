@@ -113,7 +113,7 @@ Expected results:
 
 ## MongoDB performance
 
-The Mongoose models define indexes for payment-token lookups, splits by bill/person, verified transactions by split/bill, payment-request status queries, and dashboard date sorting. Deploy the latest commit and allow the first database connection to finish building the indexes.
+The Mongoose models define a small index set for payment-token lookups, splits by bill/person, verified transactions by split/bill, payment-request status queries, and dashboard date sorting. Indexes used only by rare deletion cascades are intentionally omitted to keep normal writes fast. Deploy the latest commit and allow the first database connection to finish building the indexes.
 
 To verify them in MongoDB Atlas, open the cluster's **Indexes** tab and confirm the indexes exist on `splits`, `paymenttransactions`, `paymentrequests`, `bills`, `people`, and `whatsappmessages`. Indexes improve reads but consume storage and add a small write cost; review query plans with `explain("executionStats")` before adding more.
 

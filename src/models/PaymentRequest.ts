@@ -30,9 +30,6 @@ const PaymentRequestSchema = new mongoose.Schema(
 PaymentRequestSchema.index({ secureTokenHash: 1 });
 PaymentRequestSchema.index({ rawToken: 1 }, { sparse: true });
 PaymentRequestSchema.index({ personId: 1, status: 1, createdAt: -1 });
-PaymentRequestSchema.index({ billId: 1 });
-PaymentRequestSchema.index({ splitId: 1 });
-PaymentRequestSchema.index({ splitIds: 1 });
 PaymentRequestSchema.index({ status: 1, createdAt: -1 });
 
 export const PaymentRequest = mongoose.models.PaymentRequest || mongoose.model("PaymentRequest", PaymentRequestSchema);

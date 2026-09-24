@@ -3,22 +3,35 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, Users, CreditCard, Settings } from "lucide-react";
+import { 
+  FileText, Users, CreditCard, Settings, 
+  LayoutDashboard, MessageCircle, User, Layers,
+  ChevronRight
+} from "lucide-react";
 
 interface NavItem {
   name: string;
   href: string;
   icon: React.ElementType;
   isActive: (pathname: string) => boolean;
+  hasSubmenu?: boolean;
 }
 
-const navItems: NavItem[] = [
+const dashboardItems: NavItem[] = [
+  {
+    name: "Overview",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    isActive: (pathname: string) => pathname === "/dashboard",
+  },
+];
+
+const pagesItems: NavItem[] = [
   {
     name: "Bills",
-    href: "/dashboard",
+    href: "/dashboard/bills",
     icon: FileText,
-    isActive: (pathname: string) =>
-      pathname === "/dashboard" || pathname.startsWith("/dashboard/bills"),
+    isActive: (pathname: string) => pathname.startsWith("/dashboard/bills"),
   },
   {
     name: "People",
@@ -26,6 +39,9 @@ const navItems: NavItem[] = [
     icon: Users,
     isActive: (pathname: string) => pathname.startsWith("/dashboard/people"),
   },
+];
+
+const settingsItems: NavItem[] = [
   {
     name: "Payments",
     href: "/dashboard/payments",
@@ -40,71 +56,88 @@ const navItems: NavItem[] = [
   },
 ];
 
+const renderNavItems = (items: NavItem[], pathname: string) => {
+  return items.map((item) => {
+    const active = item.isActive(pathname);
+    const Icon = item.icon;
+
+    return (
+      <Link
+        key={item.name}
+        href={item.href}
+        prefetch={true}
+        className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-1 ${
+          active
+            ? "bg-[#a5d8ce] text-black"
+            : "text-gray-400 hover:text-gray-200 hover:bg-[#222222]"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <Icon size={18} className={active ? "text-black" : "text-gray-400"} />
+          <span>{item.name}</span>
+        </div>
+        {item.hasSubmenu && <ChevronRight size={16} className="text-gray-400" />}
+      </Link>
+    );
+  });
+};
+
 export function DesktopNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex-1 p-lg space-y-1.5 overflow-y-auto">
-      {navItems.map((item) => {
-        const active = item.isActive(pathname);
-        const Icon = item.icon;
-
-        return (
-          <Link
-            key={item.name}
-            href={item.href}
-            prefetch={true}
-            className={`flex items-center gap-md px-md py-2.5 rounded-xl text-xs font-semibold transition-all select-none active:scale-[0.98] ${
-              active
-                ? "bg-canvas text-ink shadow-2xs font-bold border border-hairline"
-                : "text-ink-mute hover:text-ink hover:bg-canvas/50"
-            }`}
-          >
-            <Icon size={18} className={active ? "text-ink" : "text-ink-mute"} />
-            <span>{item.name}</span>
-          </Link>
-        );
-      })}
+    <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-6 scrollbar-hide">
+      <div>
+        <h3 className="text-xs font-bold text-gray-500 mb-3 px-1">DASHBOARD</h3>
+        {renderNavItems(dashboardItems, pathname)}
+      </div>
+      <div>
+        <h3 className="text-xs font-bold text-gray-500 mb-3 px-1">PAGES</h3>
+        {renderNavItems(pagesItems, pathname)}
+      </div>
+      <div>
+        <h3 className="text-xs font-bold text-gray-500 mb-3 px-1">SYSTEM</h3>
+        {renderNavItems(settingsItems, pathname)}
+      </div>
     </nav>
   );
 }
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const allItems = [...dashboardItems, ...pagesItems, ...settingsItems].slice(0, 4);
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 grid grid-cols-4 gap-1 bg-canvas/95 backdrop-blur-md border-t border-hairline px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-30 shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
-      {navItems.map((item) => {
-        const active = item.isActive(pathname);
-        const Icon = item.icon;
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0a0a0c]/85 backdrop-blur-2xl border-t border-white/5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 px-2 z-50">
+      <div className="flex items-center justify-around max-w-md mx-auto">
+        {allItems.map((item) => {
+          const active = item.isActive(pathname);
+          const Icon = item.icon;
 
-        return (
-          <Link
-            key={item.name}
-            href={item.href}
-            prefetch={true}
-            className={`flex min-w-0 min-h-12 flex-col items-center justify-center gap-1 rounded-xl transition-all select-none touch-manipulation active:scale-95 ${
-              active
-                ? "bg-primary/5 text-ink font-black"
-                : "text-ink-mute hover:text-ink"
-            }`}
-          >
-            <Icon
-              size={20}
-              className={`transition-transform duration-150 ${
-                active ? "scale-110 text-ink stroke-[2.5]" : "stroke-[1.75]"
-              }`}
-            />
-            <span
-              className={`text-[10px] tracking-tight leading-none ${
-                active ? "font-bold text-ink" : "font-medium text-ink-mute"
-              }`}
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              prefetch={true}
+              className="relative flex flex-col items-center justify-center w-16 h-12 transition-all active:scale-90"
             >
-              {item.name}
-            </span>
-          </Link>
-        );
-      })}
+              {active && (
+                <span className="absolute -top-3 w-10 h-1 rounded-full bg-[#a5d8ce] shadow-[0_0_10px_rgba(165,216,206,0.8)]"></span>
+              )}
+              <div className={`p-1.5 rounded-xl transition-all duration-300 ${active ? 'bg-[#a5d8ce]/10' : ''}`}>
+                <Icon 
+                  size={22} 
+                  strokeWidth={active ? 2.5 : 2} 
+                  className={`transition-all duration-300 ${active ? "text-[#a5d8ce] scale-110" : "text-gray-500"}`} 
+                />
+              </div>
+              <span className={`text-[10px] mt-0.5 tracking-wide font-medium transition-colors ${active ? "text-[#a5d8ce]" : "text-gray-500"}`}>
+                {item.name}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

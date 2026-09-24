@@ -31,7 +31,7 @@ export default function UserAvatar({ name, size = "md", className = "" }: UserAv
 
   return (
     <div
-      className={`relative aspect-square rounded-full overflow-hidden border border-primary/15 bg-primary/5 flex items-center justify-center shrink-0 select-none shadow-2xs ${sizeClasses} ${className}`}
+      className={`relative aspect-square rounded-full overflow-hidden border border-[#333] bg-[#1a1a1a] flex items-center justify-center shrink-0 select-none shadow-xl ${sizeClasses} ${className}`}
       style={{
         borderRadius: "50%",
         clipPath: "circle(50% at 50% 50%)",
@@ -49,7 +49,7 @@ export default function UserAvatar({ name, size = "md", className = "" }: UserAv
           loading="lazy"
         />
       ) : (
-        <span className="font-mono font-bold text-ink-mute text-xs">
+        <span className="font-mono font-bold text-gray-400 text-xs">
           {getInitials(name)}
         </span>
       )}

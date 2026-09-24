@@ -85,21 +85,21 @@ export default function BillSplitRow({
   const isFullySettled = isDeduction || remainingPaise <= 0;
 
   return (
-    <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-canvas-soft/60 transition-colors">
+    <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#1a1a1a]/60 transition-colors">
       <div className="flex items-center gap-3 min-w-0">
         <UserAvatar name={person.name} size="md" />
         <div className="min-w-0">
-          <h4 className="font-bold text-ink text-sm truncate">{person.name}</h4>
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-0.5 text-xs text-ink-mute">
+          <h4 className="font-bold text-white text-sm truncate">{person.name}</h4>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-0.5 text-xs text-gray-400">
             <span>
-              Split: <strong className={isDeduction ? "text-amber-700 font-bold" : "text-ink font-semibold"}>{formatMoney(split.originalAmountPaise)}</strong>
-              {isDeduction && <span className="ml-1 text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">Deduction</span>}
+              Split: <strong className={isDeduction ? "text-amber-700 font-bold" : "text-white font-semibold"}>{formatMoney(split.originalAmountPaise)}</strong>
+              {isDeduction && <span className="ml-1 text-[10px] font-bold text-amber-700 bg-amber-900/30 px-1.5 py-0.5 rounded-full">Deduction</span>}
             </span>
             {totalPaidPaise > 0 && (
-              <span>Paid: <strong className="text-emerald-600 font-semibold">{formatMoney(totalPaidPaise)}</strong></span>
+              <span>Paid: <strong className="text-emerald-500 font-semibold">{formatMoney(totalPaidPaise)}</strong></span>
             )}
             {!isFullySettled ? (
-              <span>Due: <strong className="text-ink font-black">{formatMoney(remainingPaise)}</strong></span>
+              <span>Due: <strong className="text-white font-black">{formatMoney(remainingPaise)}</strong></span>
             ) : null}
           </div>
         </div>
@@ -112,23 +112,23 @@ export default function BillSplitRow({
               type="button"
               onClick={handleSendWhatsApp}
               disabled={waLoading}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-hairline bg-canvas hover:bg-canvas-soft active:scale-95 text-xs font-bold text-ink transition shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#333] bg-[#161616] hover:bg-[#1a1a1a] active:scale-95 text-xs font-bold text-white transition shadow-sm"
             >
-              <MessageSquare className="w-3.5 h-3.5 text-ink-mute" />
+              <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
               <span>{waLoading ? "Sending..." : "Remind"}</span>
             </button>
             <button
               type="button"
               onClick={() => setShowPaymentModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-ink text-canvas hover:bg-ink/90 active:scale-95 text-xs font-bold transition shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#a5d8ce] text-black hover:bg-[#8ec2b8] active:scale-95 text-xs font-bold transition shadow-sm"
             >
               <Check className="w-3.5 h-3.5" />
               <span>Mark Paid</span>
             </button>
           </>
         ) : (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-canvas-soft text-ink border border-hairline">
-            <CheckCircle2 className={`w-3 h-3 ${isDeduction ? "text-amber-600" : "text-emerald-600"}`} />
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#1a1a1a] text-white border border-[#333]">
+            <CheckCircle2 className={`w-3 h-3 ${isDeduction ? "text-amber-600" : "text-emerald-500"}`} />
             <span>{isDeduction ? "Credit / Deducted" : "Settled"}</span>
           </span>
         )}
@@ -136,26 +136,26 @@ export default function BillSplitRow({
 
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-          <div className="bg-canvas p-5 sm:p-6 rounded-2xl max-w-sm w-full shadow-xl border border-hairline space-y-4">
+          <div className="bg-[#161616] p-5 sm:p-6 rounded-2xl max-w-sm w-full shadow-xl border border-[#333] space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-ink text-sm sm:text-base">Record Payment</h3>
+              <h3 className="font-bold text-white text-sm sm:text-base">Record Payment</h3>
               <button
                 type="button"
                 onClick={() => setShowPaymentModal(false)}
-                className="p-1 text-ink-mute hover:text-ink rounded-lg transition"
+                className="p-1 text-gray-500 hover:text-white rounded-lg transition"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="bg-canvas-soft border border-hairline rounded-xl p-3 text-xs">
-              <p className="text-ink-mute">Person: <strong className="text-ink">{person.name}</strong></p>
-              <p className="text-ink-mute mt-1">Remaining Due: <strong className="text-ink font-bold">{formatMoney(remainingPaise)}</strong></p>
+            <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-3 text-xs">
+              <p className="text-gray-400">Person: <strong className="text-white">{person.name}</strong></p>
+              <p className="text-gray-400 mt-1">Remaining Due: <strong className="text-white font-bold">{formatMoney(remainingPaise)}</strong></p>
             </div>
             
             <form onSubmit={handleMarkPaid} className="space-y-3.5">
               <div>
-                <label className="block text-ink-mute text-[11px] uppercase font-bold tracking-wider mb-1">
+                <label className="block text-gray-400 text-[11px] uppercase font-bold tracking-wider mb-1">
                   Payment amount (₹)
                 </label>
                 <input
@@ -163,20 +163,20 @@ export default function BillSplitRow({
                   step="0.01"
                   max={toRupees(remainingPaise)}
                   required
-                  className="w-full bg-canvas text-ink border border-hairline rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-ink transition"
+                  className="w-full bg-[#161616] text-white border border-[#333] rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-[#a5d8ce] transition"
                   value={amountRupees}
                   onChange={(e) => setAmountRupees(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-ink-mute text-[11px] uppercase font-bold tracking-wider mb-1">
+                <label className="block text-gray-400 text-[11px] uppercase font-bold tracking-wider mb-1">
                   Note (optional)
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Paid via cash / GPay"
-                  className="w-full bg-canvas text-ink border border-hairline rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-ink transition"
+                  className="w-full bg-[#161616] text-white border border-[#333] rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#a5d8ce] transition"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                 />
@@ -186,14 +186,14 @@ export default function BillSplitRow({
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-ink-mute hover:text-ink transition"
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-ink text-canvas hover:bg-ink/90 active:scale-95 rounded-xl text-xs font-bold transition shadow-sm"
+                  className="px-4 py-2 bg-[#a5d8ce] text-black hover:bg-[#8ec2b8] active:scale-95 rounded-xl text-xs font-bold transition shadow-sm"
                 >
                   {loading ? "Saving..." : "Confirm Payment"}
                 </button>

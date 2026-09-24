@@ -21,11 +21,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const data = await req.json();
     
     // Only allow updating basic details to avoid breaking calculations
-    const updateData = {
+    const updateData: any = {
       title: data.title,
       description: data.description,
       date: new Date(data.date)
     };
+    if (data.category) {
+      updateData.category = data.category;
+    }
 
     const bill = await Bill.findByIdAndUpdate(id, updateData, { new: true });
     if (!bill) return NextResponse.json({ error: "Bill not found" }, { status: 404 });

@@ -40,9 +40,5 @@ export default async function PaymentsPage() {
     } : null,
   }));
 
-  return (
-    <div className="p-md md:p-huge max-w-6xl mx-auto">
-      <PaymentsClient initialPayments={serializablePayments} />
-    </div>
-  );
+  return <PaymentsClient initialPayments={serializablePayments} />;
 }

@@ -6,6 +6,7 @@ const BillSchema = new mongoose.Schema(
     description: { type: String },
     totalAmountPaise: { type: Number, required: true },
     date: { type: Date, required: true, default: Date.now },
+    category: { type: String, default: "General" },
     status: {
       type: String,
       required: true,

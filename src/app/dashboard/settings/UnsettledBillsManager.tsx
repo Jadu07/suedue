@@ -59,7 +59,7 @@ export default function UnsettledBillsManager({
 
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/bills/${selectedBill._id}`, {
+      const res = await fetch(`/api/bills/₹{selectedBill._id}`, {
         method: "DELETE",
       });
 
@@ -70,7 +70,7 @@ export default function UnsettledBillsManager({
 
       setBills(prev => prev.filter(b => b._id !== selectedBill._id));
       setToastMessage({
-        text: data.message || `Bill "${selectedBill.title}" and linked transactions deleted.`,
+        text: data.message || `Bill "₹{selectedBill.title}" and linked transactions deleted.`,
         type: "success"
       });
       setTimeout(() => setToastMessage(null), 4000);
@@ -91,10 +91,10 @@ export default function UnsettledBillsManager({
   const isConfirmValid = confirmCheck && (!requiresTyping || confirmText.trim().toUpperCase() === "DELETE");
 
   return (
-    <div className="bg-canvas border border-red-200/80 dark:border-red-950/60 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+    <div className="bg-[#161616] border border-red-200/80 dark:border-red-950/60 rounded-2xl p-5 sm:p-6  space-y-4">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className={`fixed top-5 left-1/2 -translate-x-1/2 text-xs font-bold py-2 px-4 rounded-full shadow-2xl z-50 animate-in fade-in duration-150 whitespace-nowrap ${
+        <div className={`fixed top-5 left-1/2 -translate-x-1/2 text-xs font-bold py-2 px-4 rounded-full shadow-2xl z-50 animate-in fade-in duration-150 whitespace-nowrap ₹{
           toastMessage.type === "success" 
             ? "bg-emerald-700 text-white" 
             : "bg-red-700 text-white"
@@ -104,16 +104,16 @@ export default function UnsettledBillsManager({
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-hairline">
+      <div className="flex items-center justify-between pb-3 border-b border-[#333]">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
             <AlertTriangle className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-ink uppercase tracking-wider text-[11px]">
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider text-[11px]">
               Danger Zone: Unsettled Bills Management
             </h2>
-            <p className="text-xs text-ink-mute">
+            <p className="text-xs text-gray-400">
               Delete unsettled bills and cascade-purge associated payment transactions
             </p>
           </div>
@@ -126,7 +126,7 @@ export default function UnsettledBillsManager({
 
       {/* Bills List */}
       {bills.length === 0 ? (
-        <div className="bg-canvas-soft border border-hairline rounded-xl p-4 text-center text-xs text-ink-mute flex items-center justify-center gap-2">
+        <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 text-center text-xs text-gray-400 flex items-center justify-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           <span>All clear! No unsettled bills found. Every bill is completely settled.</span>
         </div>
@@ -141,25 +141,25 @@ export default function UnsettledBillsManager({
             return (
               <div 
                 key={bill._id} 
-                className="bg-canvas-soft/70 border border-hairline rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-red-200 transition-colors"
+                className="bg-[#1a1a1a]/70 border border-[#333] rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-red-200 transition-colors"
               >
                 <div className="min-w-0 space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-bold text-ink text-sm truncate">{bill.title}</h4>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-canvas text-ink-mute border border-hairline">
+                    <h4 className="font-bold text-white text-sm truncate">{bill.title}</h4>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#161616] text-gray-400 border border-[#333]">
                       <Clock className="w-2.5 h-2.5 text-amber-600" />
                       <span>{bill.status === "PARTIALLY_PAID" ? "Partially Paid" : "Open"}</span>
                     </span>
-                    <span className="text-xs font-black text-ink">
+                    <span className="text-xs font-black text-white">
                       {formatMoney(bill.totalAmountPaise)}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs text-ink-mute flex-wrap">
+                  <div className="flex items-center gap-3 text-xs text-gray-400 flex-wrap">
                     <span>{dateStr}</span>
                     <span>•</span>
                     <span className="inline-flex items-center gap-1">
-                      <Users className="w-3 h-3 text-ink-faint" />
+                      <Users className="w-3 h-3 text-gray-500" />
                       {bill.splitsCount} split(s)
                     </span>
                     <span>•</span>
@@ -169,7 +169,7 @@ export default function UnsettledBillsManager({
                         {bill.transactionsCount} transaction(s) ({formatMoney(bill.transactionsAmountPaise)} collected)
                       </span>
                     ) : (
-                      <span className="text-ink-faint">0 transactions</span>
+                      <span className="text-gray-500">0 transactions</span>
                     )}
                   </div>
                 </div>
@@ -178,7 +178,7 @@ export default function UnsettledBillsManager({
                   <button
                     type="button"
                     onClick={() => openDeleteModal(bill)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 bg-canvas hover:bg-red-50 text-red-600 active:scale-95 text-xs font-bold transition shadow-2xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 bg-[#161616] hover:bg-red-50 text-red-600 active:scale-95 text-xs font-bold transition  cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Delete Bill</span>
@@ -193,40 +193,40 @@ export default function UnsettledBillsManager({
       {/* Proper Warning Confirmation Modal */}
       {selectedBill && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-          <div className="bg-canvas p-5 sm:p-6 rounded-2xl max-w-lg w-full shadow-2xl border border-hairline space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#161616] p-5 sm:p-6 rounded-2xl max-w-lg w-full shadow-2xl border border-[#333] space-y-4 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-red-900/30 text-red-400 border border-red-800 text-red-600 flex items-center justify-center shrink-0">
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-ink text-base">Permanently Delete Bill</h3>
-                  <p className="text-xs text-ink-mute">Review the consequences before proceeding</p>
+                  <h3 className="font-black text-white text-base">Permanently Delete Bill</h3>
+                  <p className="text-xs text-gray-400">Review the consequences before proceeding</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={closeDeleteModal}
                 disabled={isDeleting}
-                className="p-1 text-ink-mute hover:text-ink rounded-lg transition disabled:opacity-30"
+                className="p-1 text-gray-400 hover:text-white rounded-lg transition disabled:opacity-30"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Target Bill Info */}
-            <div className="bg-canvas-soft border border-hairline rounded-xl p-3.5 space-y-1 text-xs">
+            <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-3.5 space-y-1 text-xs">
               <div className="flex justify-between items-center">
-                <span className="text-ink-mute">Bill Title:</span>
-                <strong className="text-ink font-bold text-sm">{selectedBill.title}</strong>
+                <span className="text-gray-400">Bill Title:</span>
+                <strong className="text-white font-bold text-sm">{selectedBill.title}</strong>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-ink-mute">Total Bill Amount:</span>
-                <strong className="text-ink font-bold">{formatMoney(selectedBill.totalAmountPaise)}</strong>
+                <span className="text-gray-400">Total Bill Amount:</span>
+                <strong className="text-white font-bold">{formatMoney(selectedBill.totalAmountPaise)}</strong>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-ink-mute">Status:</span>
+                <span className="text-gray-400">Status:</span>
                 <span className="font-bold text-amber-700">{selectedBill.status}</span>
               </div>
             </div>
@@ -241,10 +241,10 @@ export default function UnsettledBillsManager({
                 <p className="leading-relaxed">
                   This bill has <strong>{selectedBill.transactionsCount} recorded transaction(s)</strong> totaling <strong>{formatMoney(selectedBill.transactionsAmountPaise)}</strong>.
                 </p>
-                <p className="leading-relaxed text-red-800">
+                <p className="leading-relaxed ">
                   Proceeding will permanently purge:
                 </p>
-                <ul className="list-disc pl-4 space-y-1 text-red-800">
+                <ul className="list-disc pl-4 space-y-1 ">
                   <li><strong>{selectedBill.transactionsCount} payment transactions</strong> and verified records</li>
                   <li><strong>{selectedBill.splitsCount} member split allocations</strong></li>
                   <li><strong>{selectedBill.requestsCount} payment requests & links</strong></li>
@@ -268,27 +268,27 @@ export default function UnsettledBillsManager({
 
             {/* Confirmation Controls */}
             <div className="space-y-3 pt-1">
-              <label className="flex items-start gap-2 text-xs text-ink cursor-pointer select-none">
+              <label className="flex items-start gap-2 text-xs text-white cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={confirmCheck}
                   onChange={(e) => setConfirmCheck(e.target.checked)}
-                  className="mt-0.5 rounded border-hairline accent-red-600 w-4 h-4"
+                  className="mt-0.5 rounded border-[#333] accent-red-600 w-4 h-4"
                 />
-                <span className="leading-snug text-ink-mute">
+                <span className="leading-snug text-gray-400">
                   I understand that this unsettled bill and all its associated records will be permanently deleted.
                 </span>
               </label>
 
               {requiresTyping && (
                 <div>
-                  <label className="block text-ink-mute text-[11px] font-bold uppercase tracking-wider mb-1">
+                  <label className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1">
                     Type <span className="text-red-600 font-mono font-black">DELETE</span> to confirm:
                   </label>
                   <input
                     type="text"
                     placeholder="DELETE"
-                    className="w-full bg-canvas text-ink border border-hairline rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:border-red-500 transition uppercase"
+                    className="w-full bg-[#161616] text-white border border-[#333] rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:border-red-500 transition uppercase"
                     value={confirmText}
                     onChange={(e) => setConfirmText(e.target.value)}
                   />
@@ -297,12 +297,12 @@ export default function UnsettledBillsManager({
             </div>
 
             {/* Actions */}
-            <div className="pt-2 flex justify-end gap-2 border-t border-hairline">
+            <div className="pt-2 flex justify-end gap-2 border-t border-[#333]">
               <button
                 type="button"
                 onClick={closeDeleteModal}
                 disabled={isDeleting}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-ink-mute hover:text-ink transition cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition cursor-pointer"
               >
                 Cancel
               </button>

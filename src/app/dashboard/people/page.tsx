@@ -4,6 +4,7 @@ import { Split } from "@/models/Split";
 import { PaymentTransaction } from "@/models/PaymentTransaction";
 import { PaymentRequest } from "@/models/PaymentRequest";
 import PeopleListClient, { PersonItem } from "./PeopleListClient";
+import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -119,5 +120,9 @@ export default async function PeoplePage() {
     };
   });
 
-  return <PeopleListClient initialPeople={serializedPeople} />;
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-gray-500">Loading people...</div>}>
+      <PeopleListClient initialPeople={serializedPeople} />
+    </Suspense>
+  );
 }

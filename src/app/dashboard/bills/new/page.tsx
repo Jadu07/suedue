@@ -11,6 +11,7 @@ import UserAvatar from "@/components/UserAvatar";
 export default function NewBillPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("General");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [people, setPeople] = useState<any[]>([]);
   
@@ -94,21 +95,21 @@ export default function NewBillPage() {
   if (pageLoading) {
     return (
       <div className="p-3 sm:p-md md:p-huge max-w-2xl mx-auto space-y-md animate-pulse">
-        <div className="h-4 w-24 rounded bg-canvas-soft" />
-        <div className="rounded-2xl border border-hairline bg-canvas p-4 space-y-2">
-          <div className="h-6 w-40 rounded bg-canvas-soft" />
-          <div className="h-3 w-64 max-w-full rounded bg-canvas-soft" />
+        <div className="h-4 w-24 rounded bg-[#1a1a1a]" />
+        <div className="rounded-2xl border border-[#333] bg-[#161616] p-4 space-y-2">
+          <div className="h-6 w-40 rounded bg-[#1a1a1a]" />
+          <div className="h-3 w-64 max-w-full rounded bg-[#1a1a1a]" />
         </div>
-        <div className="rounded-2xl border border-hairline bg-canvas p-4 space-y-4">
-          <div className="h-3 w-24 rounded bg-canvas-soft" />
-          <div className="h-11 w-full rounded-xl bg-canvas-soft" />
-          <div className="h-11 w-full rounded-xl bg-canvas-soft" />
-          <div className="h-11 w-full rounded-xl bg-canvas-soft" />
+        <div className="rounded-2xl border border-[#333] bg-[#161616] p-4 space-y-4">
+          <div className="h-3 w-24 rounded bg-[#1a1a1a]" />
+          <div className="h-11 w-full rounded-xl bg-[#1a1a1a]" />
+          <div className="h-11 w-full rounded-xl bg-[#1a1a1a]" />
+          <div className="h-11 w-full rounded-xl bg-[#1a1a1a]" />
         </div>
-        <div className="rounded-2xl border border-hairline bg-canvas p-4 space-y-4">
-          <div className="h-5 w-36 rounded bg-canvas-soft" />
-          <div className="h-24 w-full rounded-xl bg-canvas-soft" />
-          <div className="h-12 w-full rounded-xl bg-canvas-soft" />
+        <div className="rounded-2xl border border-[#333] bg-[#161616] p-4 space-y-4">
+          <div className="h-5 w-36 rounded bg-[#1a1a1a]" />
+          <div className="h-24 w-full rounded-xl bg-[#1a1a1a]" />
+          <div className="h-12 w-full rounded-xl bg-[#1a1a1a]" />
         </div>
       </div>
     );
@@ -153,6 +154,7 @@ export default function NewBillPage() {
           title: title.trim(),
           description: description.trim(),
           date,
+          category,
           totalAmountPaise,
           splits: parsedSplits
         }),
@@ -174,40 +176,45 @@ export default function NewBillPage() {
   };
 
   return (
-    <div className="p-3 sm:p-md md:p-huge max-w-2xl mx-auto space-y-md pb-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-2xl mx-auto pb-12">
       {/* Top Breadcrumb */}
-      <div className="flex items-center gap-2">
+      <div>
         <Link 
           href="/dashboard" 
-          className="inline-flex items-center gap-1 text-xs text-ink-mute hover:text-ink transition font-medium"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition py-2 touch-manipulation"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Bills</span>
         </Link>
       </div>
 
-      <div className="rounded-2xl border border-hairline bg-canvas p-4 shadow-2xs">
-        <div className="min-w-0">
-          <h1 className="text-xl font-black tracking-tight text-ink">Create bill</h1>
-          <p className="mt-1 text-xs text-ink-mute">Add an expense and split it with your people.</p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-black tracking-tight text-white">Create bill</h1>
+        <p className="mt-1 text-sm text-gray-400">Add an expense and split it.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-lg">
-        {/* Bill Info Card */}
-        <div className="bg-canvas border border-hairline rounded-2xl p-3 sm:p-md md:p-xl space-y-md shadow-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-md">
-            <div className="sm:col-span-2">
-            <label className="block text-[11px] font-bold text-ink uppercase tracking-wider mb-1">
-                Bill title *
+      {loading && (
+        <div className="fixed inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center space-y-4">
+          <div className="w-12 h-12 border-4 border-[#1a1a1a] border-t-[#a5d8ce] rounded-full animate-spin"></div>
+          <div className="text-white font-bold tracking-widest text-sm uppercase">Creating bill...</div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-8 relative">
+        {/* Bill Info Section */}
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-bold text-gray-400 mb-1.5 ml-1">
+                Bill title
               </label>
               <div className="relative">
-                <FileText className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2" />
+                <FileText className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Dinner at Socials, WiFi Bill, Groceries"
-                  className="h-11 w-full bg-canvas text-ink border border-hairline rounded-xl pl-9 pr-md text-sm focus:outline-none focus:border-ink transition font-medium"
+                  placeholder="e.g. WiFi Bill"
+                  className="h-12 w-full bg-[#1a1a1a] text-white rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#a5d8ce]/50 transition font-bold border border-transparent hover:border-[#333] placeholder:text-gray-600 placeholder:font-medium"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
@@ -215,107 +222,118 @@ export default function NewBillPage() {
             </div>
 
             <div>
-            <label className="block text-[11px] font-bold text-ink uppercase tracking-wider mb-1">
-                Date *
+              <label className="block text-xs font-bold text-gray-400 mb-1.5 ml-1">
+                Category
               </label>
-              <div className="relative">
-                <Calendar className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="date"
-                  required
-                  className="h-11 w-full bg-canvas text-ink border border-hairline rounded-xl pl-9 pr-md text-sm focus:outline-none focus:border-ink transition font-medium"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
-              </div>
+              <select
+                className="h-12 w-full bg-[#1a1a1a] text-white rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#a5d8ce]/50 transition font-bold border border-transparent hover:border-[#333] cursor-pointer"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value="General">General</option>
+                <option value="Food & Dining">Food & Dining</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Rent">Rent</option>
+                <option value="Travel">Travel</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-ink uppercase tracking-wider mb-1">
-              Note <span className="font-medium normal-case tracking-normal text-ink-faint">(optional)</span>
+            <label className="block text-xs font-bold text-gray-400 mb-1.5 ml-1">
+              Date
+            </label>
+            <div className="relative">
+              <Calendar className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="date"
+                required
+                className="h-12 w-full bg-[#1a1a1a] text-white rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#a5d8ce]/50 transition font-bold border border-transparent hover:border-[#333]"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-400 mb-1.5 ml-1">
+              Note <span className="font-medium text-gray-600">(optional)</span>
             </label>
             <input
               type="text"
-              placeholder="Add optional notes or item breakdown"
-              className="h-11 w-full bg-canvas text-ink border border-hairline rounded-xl px-md text-sm focus:outline-none focus:border-ink transition font-medium"
+              placeholder="Add optional notes..."
+              className="h-12 w-full bg-[#1a1a1a] text-white rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#a5d8ce]/50 transition font-medium border border-transparent hover:border-[#333] placeholder:text-gray-600"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
         </div>
 
-        {/* Splits Card */}
-        <div className="bg-canvas border border-hairline rounded-2xl p-3 sm:p-md md:p-xl space-y-md shadow-sm">
-          <div className="flex justify-between items-center pb-xs border-b border-hairline">
+        <div className="h-px bg-gradient-to-r from-transparent via-[#333] to-transparent my-6"></div>
+
+        {/* Splits Section */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center ml-1">
             <div>
-              <h3 className="font-bold text-ink text-sm flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-primary" />
-                <span>Split breakdown</span>
-              </h3>
-              <p className="text-[11px] text-ink-mute mt-0.5">
-                Add who owes what
-              </p>
+              <h3 className="font-bold text-white text-base">Split breakdown</h3>
             </div>
             
             <button
               type="button"
               onClick={addSplit}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-canvas-soft border border-hairline hover:bg-canvas rounded-xl text-xs font-bold text-ink transition active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1a1a1a] hover:bg-[#333] rounded-full text-xs font-bold text-white transition active:scale-95"
             >
-              <Plus className="w-3.5 h-3.5 text-primary" />
+              <Plus className="w-3.5 h-3.5 text-[#a5d8ce]" />
               <span>Add person</span>
             </button>
           </div>
 
-          {/* Splits List */}
-          <div className="space-y-sm">
+          <div className="space-y-3">
             {splits.map((split, idx) => {
               const selectedPerson = people.find(p => p._id === split.personId);
               return (
                 <div
                   key={idx}
-                  className="bg-canvas-soft/60 border border-hairline rounded-xl p-3 md:p-md flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 transition hover:border-ink/20"
+                  className="bg-[#1a1a1a] rounded-2xl p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 transition"
                 >
-                  {/* Person Selector with Avatar */}
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     {selectedPerson ? (
-                      <UserAvatar name={selectedPerson.name} size="sm" />
+                      <UserAvatar name={selectedPerson.name} size="md" />
                     ) : (
-                      <div className="w-7 h-7 rounded-lg border border-hairline bg-canvas flex items-center justify-center text-ink-faint shrink-0">
-                        <Users className="w-3.5 h-3.5" />
+                      <div className="w-10 h-10 rounded-full border-2 border-dashed border-[#333] flex items-center justify-center text-gray-500 shrink-0">
+                        <Users className="w-4 h-4" />
                       </div>
                     )}
                     <select
                       required
-                      className="h-11 w-full bg-canvas text-ink border border-hairline rounded-xl px-md text-sm focus:outline-none focus:border-ink transition font-medium cursor-pointer"
+                      className="h-12 w-full bg-transparent text-white px-2 text-sm focus:outline-none transition font-bold cursor-pointer"
                       value={split.personId}
                       onChange={(e) => updateSplit(idx, "personId", e.target.value)}
                     >
-                      <option value="">Select person...</option>
+                      <option value="" className="bg-[#1a1a1a]">Select person...</option>
                       {people.map(p => (
-                        <option key={p._id} value={p._id}>{p.name} ({p.phone})</option>
+                        <option key={p._id} value={p._id} className="bg-[#1a1a1a]">{p.name}</option>
                       ))}
                     </select>
                   </div>
 
-                  {/* Amount Input & Remove Button */}
-                  <div className="flex items-center gap-xs sm:gap-sm flex-nowrap">
+                  <div className="flex items-center gap-2 flex-nowrap bg-[#0f0f11] p-1.5 rounded-xl border border-[#333]">
                     <button
                       type="button"
                       onClick={() => toggleAmountSign(idx)}
                       disabled={!split.amountRupees || split.amountRupees === "-" || split.amountRupees === "+"}
-                      aria-label={split.isDeduction ? "Make amount positive" : "Make amount negative"}
-                      className={`h-8 w-8 shrink-0 rounded-full border text-sm font-black transition active:scale-95 disabled:opacity-30 ${
+                      className={`h-9 w-9 shrink-0 rounded-lg text-sm font-black transition active:scale-95 disabled:opacity-30 ${
                         split.isDeduction
-                          ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-                          : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          ? "bg-red-500/20 text-red-500"
+                          : "bg-emerald-500/20 text-emerald-500"
                       }`}
                     >
                       {split.isDeduction ? "+" : "−"}
                     </button>
-                    <div className="relative flex-1 min-w-0 sm:w-36 sm:flex-initial">
-                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${split.isDeduction ? "text-red-600" : "text-emerald-700"}`}>
+                    <div className="relative flex-1 min-w-0 sm:w-32">
+                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${split.isDeduction ? "text-red-500" : "text-emerald-500"}`}>
                         ₹
                       </span>
                       <input
@@ -323,12 +341,8 @@ export default function NewBillPage() {
                         inputMode="decimal"
                         required
                         placeholder="0.00"
-                        className={`h-11 w-full bg-canvas border rounded-xl pl-7 pr-md text-sm font-mono font-bold focus:outline-none transition ${
-                          split.isDeduction
-                            ? "border-red-200 bg-red-50/40 text-red-600 focus:border-red-500"
-                            : split.amountRupees
-                              ? "border-emerald-200 bg-emerald-50/40 text-emerald-700 focus:border-emerald-500"
-                              : "border-hairline text-ink focus:border-ink"
+                        className={`h-9 w-full bg-transparent pl-7 pr-2 text-sm font-mono font-bold focus:outline-none transition ${
+                          split.isDeduction ? "text-red-500" : "text-emerald-500"
                         }`}
                         value={split.amountRupees}
                         onChange={(e) => updateSplit(idx, "amountRupees", e.target.value)}
@@ -339,97 +353,52 @@ export default function NewBillPage() {
                         }}
                       />
                     </div>
-
-                    {/* Remove Button (perfect height and alignment) */}
                     <button
                       type="button"
                       onClick={() => removeSplit(idx)}
                       disabled={splits.length <= 1}
-                      className="h-[34px] w-[34px] shrink-0 flex items-center justify-center rounded-xl border border-hairline bg-canvas hover:bg-red-50 text-ink-faint hover:text-red-600 transition disabled:opacity-30 disabled:pointer-events-none"
-                      title="Remove split"
+                      className="h-9 w-9 shrink-0 flex items-center justify-center rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-500 transition disabled:opacity-30 disabled:pointer-events-none"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               );
             })}
-
-            {splits.length === 0 && (
-              <div className="text-center py-md text-xs text-ink-mute bg-canvas-soft rounded-xl border border-hairline">
-                No people added to this bill. Click &quot;Add Person&quot; above.
-              </div>
-            )}
           </div>
 
-          {/* Live Total Calculation Banner with Deductions */}
-          {negativeTotalPaise > 0 ? (
-            <div className="p-md bg-canvas rounded-xl border border-hairline mt-md space-y-2 shadow-2xs">
-              <div className="flex justify-between items-center text-xs pb-2 border-b border-hairline/80">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-ink-mute font-medium">Charges:</span>
-                  <span className="font-bold text-ink">{formatMoney(positiveTotalPaise)}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-amber-700 font-medium">Deductions:</span>
-                  <span className="font-bold text-amber-700">-{formatMoney(negativeTotalPaise)}</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center pt-0.5">
-                <div>
-                  <span className="text-[11px] text-ink-mute uppercase tracking-wider font-bold">Net Bill Amount:</span>
-                  <p className="text-xs text-ink-faint">
-                    {liveTotalPaise < 0 ? "Negative bill (credits/refunds to members)" : "Total amount after deducting -ve"}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className={`text-xl font-black ${liveTotalPaise < 0 ? "text-amber-600" : "text-ink"}`}>
-                    {formatMoney(liveTotalPaise)}
-                  </span>
-                  {liveTotalPaise < 0 && (
-                    <span className="block text-[10px] font-bold text-amber-600 uppercase tracking-wider">
-                      Negative Bill
-                    </span>
-                  )}
-                </div>
-              </div>
+          {/* Live Total Banner */}
+          <div className="mt-6 flex justify-between items-center px-4 py-4 bg-[#1a1a1a] rounded-2xl border border-[#333]">
+            <div>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total</span>
+              {negativeTotalPaise > 0 && (
+                <p className="text-[10px] text-gray-500 mt-0.5">Includes {formatMoney(negativeTotalPaise)} in deductions</p>
+              )}
             </div>
-          ) : (
-            <div className="p-md bg-canvas rounded-xl border border-hairline flex justify-between items-center mt-md">
-              <div>
-                <span className="text-[11px] text-ink-mute uppercase tracking-wider font-bold">Total</span>
-                <p className="text-xs text-ink-faint">From your splits</p>
-              </div>
-              <div className="text-right">
-                <span className={`text-xl font-black ${liveTotalPaise < 0 ? "text-amber-600" : "text-ink"}`}>
-                  {formatMoney(liveTotalPaise)}
-                </span>
-                {liveTotalPaise < 0 && (
-                  <span className="block text-[10px] font-bold text-amber-600 uppercase tracking-wider">
-                    Negative Bill
-                  </span>
-                )}
-              </div>
+            <div className="text-right">
+              <span className={`text-2xl font-black ${liveTotalPaise < 0 ? "text-red-500" : "text-white"}`}>
+                {formatMoney(liveTotalPaise)}
+              </span>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Bottom Actions */}
-        <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-sm pt-xs">
-          <Button 
-            type="button" 
-            onClick={() => router.back()} 
-            className="btn-secondary-outline w-full sm:w-auto text-xs py-2.5"
+        {/* Action Buttons */}
+        <div className="pt-4 flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="w-full sm:w-1/3 py-3.5 rounded-2xl text-sm font-bold text-gray-400 bg-[#1a1a1a] hover:bg-[#333] hover:text-white transition active:scale-95"
           >
             Cancel
-          </Button>
-          <Button 
-            type="submit" 
-            disabled={loading || splits.length === 0 || liveTotalPaise === 0} 
-            className="btn-primary-dark w-full sm:w-auto text-xs py-2.5 shadow-sm"
+          </button>
+          <button
+            type="submit"
+            disabled={loading || splits.length === 0 || liveTotalPaise === 0}
+            className="w-full sm:w-2/3 py-3.5 rounded-2xl text-sm font-black text-black bg-[#a5d8ce] hover:bg-[#8ec2b8] transition shadow-lg active:scale-95 disabled:opacity-30"
           >
-            {loading ? "Creating…" : `Create bill · ${formatMoney(liveTotalPaise)}`}
-          </Button>
+            {loading ? "Creating…" : `Create Bill`}
+          </button>
         </div>
       </form>
     </div>

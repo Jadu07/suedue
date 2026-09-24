@@ -12,13 +12,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const data = await req.json();
-    const { title, description, date, totalAmountPaise, splits } = data;
+    const { title, description, date, category, totalAmountPaise, splits } = data;
 
     // Create Bill (supports positive or negative bills)
     const bill = await Bill.create([{
       title,
       description,
       date: new Date(date),
+      category: category || "General",
       totalAmountPaise,
       status: "OPEN"
     }], { session });

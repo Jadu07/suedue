@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatMoney } from "@/lib/money";
 import PersonActions from "./PersonActions";
 import UserAvatar from "@/components/UserAvatar";
@@ -36,8 +36,13 @@ export interface PersonItem {
 }
 
 export default function PeopleListClient({ initialPeople }: { initialPeople: PersonItem[] }) {
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("q") || "";
+  const [search, setSearch] = useState(initialSearch);
   const [filterTab, setFilterTab] = useState<"all" | "pending" | "settled">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const [personToDelete, setPersonToDelete] = useState<{id: string, name: string} | null>(null);
   const router = useRouter();
 
   // Live filter & search
@@ -63,316 +68,267 @@ export default function PeopleListClient({ initialPeople }: { initialPeople: Per
     return result;
   }, [initialPeople, search, filterTab]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredPeople.length / limit));
+
+  const paginatedPeople = useMemo(() => {
+    const start = (currentPage - 1) * limit;
+    return filteredPeople.slice(start, start + limit);
+  }, [filteredPeople, currentPage, limit]);
+
   // Aggregate metrics
-  const totalPeopleCount = initialPeople.length;
-  const pendingPeopleCount = initialPeople.filter((p) => p.pendingPaise > 0).length;
-  const settledPeopleCount = initialPeople.filter((p) => p.pendingPaise === 0).length;
-  const totalOutstandingPaise = initialPeople.reduce((acc, p) => acc + (p.pendingPaise || 0), 0);
+  const { 
+    totalPeopleCount, peopleDiff, 
+    totalOutstandingPaise, outstandingDiff,
+    settledPeopleCount, settledDiff,
+    pendingReminders, remindersDiff 
+  } = useMemo(() => {
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    let cPeople = 0, lPeople = 0;
+    let cOut = 0, lOut = 0;
+    let cSettled = 0, lSettled = 0;
+    let cRem = 0, lRem = 0;
+
+    const totalPeople = initialPeople.length;
+    const totalOut = initialPeople.reduce((acc, p) => acc + (p.pendingPaise || 0), 0);
+    const totalSet = initialPeople.filter((p) => p.pendingPaise === 0).length;
+    const totalRem = initialPeople.filter(p => p.activeRequest).length;
+
+    initialPeople.forEach(p => {
+      const createdAt = p.createdAt ? new Date(p.createdAt) : new Date();
+      if (createdAt >= currentMonthStart) {
+        cPeople++;
+        if (p.pendingPaise > 0) cOut += p.pendingPaise;
+        if (p.pendingPaise === 0) cSettled++;
+        if (p.activeRequest) cRem++;
+      } else if (createdAt >= lastMonthStart && createdAt < currentMonthStart) {
+        lPeople++;
+        if (p.pendingPaise > 0) lOut += p.pendingPaise;
+        if (p.pendingPaise === 0) lSettled++;
+        if (p.activeRequest) lRem++;
+      }
+    });
+
+    const calcPct = (curr: number, prev: number) => {
+      if (prev === 0) return curr > 0 ? "+100%" : "0%";
+      const diff = ((curr - prev) / prev) * 100;
+      return diff > 0 ? `+${diff.toFixed(1)}%` : `${diff.toFixed(1)}%`;
+    };
+
+    return {
+      totalPeopleCount: totalPeople,
+      peopleDiff: cPeople - lPeople,
+      totalOutstandingPaise: totalOut,
+      outstandingDiff: calcPct(cOut, lOut),
+      settledPeopleCount: totalSet,
+      settledDiff: cSettled - lSettled,
+      pendingReminders: totalRem,
+      remindersDiff: cRem - lRem
+    };
+  }, [initialPeople]);
 
   return (
-    <div className="p-md md:p-huge max-w-5xl mx-auto space-y-md md:space-y-lg">
-      {/* Desktop Header (hidden on mobile) */}
-      <div className="hidden md:flex md:items-center justify-between gap-md">
-        <div>
-          <h1 className="display-lg text-ink font-black tracking-tight">People</h1>
-          <p className="text-xs text-ink-mute mt-0.5">
-            Directory of split members, balances, and payment links.
-          </p>
-        </div>
-        <Link href="/dashboard/people/new">
-          <button className="btn-primary-dark shadow-sm flex items-center justify-center gap-2 py-2.5 px-xl text-xs">
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>Add Person</span>
-          </button>
-        </Link>
-      </div>
-
-      {/* Mobile Action Bar (clean minimal button, no repetitive header) */}
-      <div className="md:hidden">
-        <Link href="/dashboard/people/new" className="block">
-          <button className="w-full flex items-center justify-center gap-2 py-2.5 px-md bg-ink text-canvas active:scale-[0.98] rounded-xl text-xs font-bold transition shadow-sm">
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>Add Person</span>
-          </button>
-        </Link>
-      </div>
-
-      {/* Clean 3-Metric Overview */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-sm">
-        <div className="bg-canvas border border-hairline p-3 sm:p-md rounded-xl flex flex-col justify-between">
-          <span className="text-[10px] sm:text-[11px] text-ink-mute uppercase tracking-wider font-semibold block truncate">
-            Members
-          </span>
-          <p className="text-lg sm:text-2xl font-black text-ink mt-1">
-            {totalPeopleCount}
-          </p>
-        </div>
-
-        <div className="bg-canvas border border-hairline p-3 sm:p-md rounded-xl flex flex-col justify-between">
-          <span className="text-[10px] sm:text-[11px] text-ink-mute uppercase tracking-wider font-semibold block truncate">
-            Outstanding
-          </span>
-          <p className="text-lg sm:text-2xl font-black text-ink mt-1 truncate">
-            {formatMoney(totalOutstandingPaise)}
-          </p>
-        </div>
-
-        <div className="bg-canvas border border-hairline p-3 sm:p-md rounded-xl flex flex-col justify-between">
-          <span className="text-[10px] sm:text-[11px] text-ink-mute uppercase tracking-wider font-semibold block truncate">
-            With Dues
-          </span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <p className="text-lg sm:text-2xl font-black text-ink">
-              {pendingPeopleCount}
-            </p>
-            <span className="text-[10px] sm:text-xs text-ink-faint">
-              / {settledPeopleCount} ok
-            </span>
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#333] border border-[#333] rounded-xl overflow-hidden [&>*]:bg-[#161616]">
+        <div className="p-4 md:p-6 border-b md:border-b-0 md:border-r border-[#333]">
+          <div className="flex items-center gap-2 text-gray-400 mb-2 md:mb-4 text-[10px] md:text-xs font-bold tracking-wider">
+            <Users className="w-3.5 h-3.5" />
+            ACTIVE MEMBERS
           </div>
+          <div className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">{totalPeopleCount}</div>
+          <div className="text-[10px] md:text-xs font-medium"><span className={peopleDiff > 0 ? 'text-green-500' : peopleDiff < 0 ? 'text-red-400' : 'text-gray-500'}>{peopleDiff > 0 ? `+${peopleDiff}` : peopleDiff}</span> <span className="text-gray-500">vs last month</span></div>
+        </div>
+        <div className="p-4 md:p-6 border-b md:border-b-0 md:border-r border-[#333]">
+          <div className="flex items-center gap-2 text-gray-400 mb-2 md:mb-4 text-[10px] md:text-xs font-bold tracking-wider">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            TOTAL OUTSTANDING
+          </div>
+          <div className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">{formatMoney(totalOutstandingPaise)}</div>
+          <div className="text-[10px] md:text-xs font-medium"><span className={outstandingDiff.startsWith('+') && outstandingDiff !== '+0.0%' && outstandingDiff !== '0%' ? 'text-green-500' : outstandingDiff === '0%' ? 'text-gray-500' : 'text-red-400'}>{outstandingDiff}</span> <span className="text-gray-500">vs last month</span></div>
+        </div>
+        <div className="hidden md:block p-6 border-b md:border-b-0 md:border-r border-[#333]">
+          <div className="flex items-center gap-2 text-gray-400 mb-4 text-xs font-bold tracking-wider">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            SETTLED MEMBERS
+          </div>
+          <div className="text-3xl font-bold text-white mb-2">{settledPeopleCount}</div>
+          <div className="text-xs font-medium"><span className={settledDiff > 0 ? 'text-green-500' : settledDiff < 0 ? 'text-red-400' : 'text-gray-500'}>{settledDiff > 0 ? `+${settledDiff}` : settledDiff}</span> <span className="text-gray-500">vs last month</span></div>
+        </div>
+        <div className="hidden md:block p-6">
+          <div className="flex items-center gap-2 text-gray-400 mb-4 text-xs font-bold tracking-wider">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            PENDING REMINDERS
+          </div>
+          <div className="text-3xl font-bold text-white mb-2">{pendingReminders}</div>
+          <div className="text-xs font-medium"><span className={remindersDiff > 0 ? 'text-red-400' : remindersDiff < 0 ? 'text-green-500' : 'text-gray-500'}>{remindersDiff > 0 ? `+${remindersDiff}` : remindersDiff}</span> <span className="text-gray-500">vs last month</span></div>
         </div>
       </div>
 
-      {/* Controls: Search & Tabs */}
-      <div className="space-y-sm">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-sm">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-ink-mute absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search by name, phone, or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-canvas text-ink border border-hairline rounded-xl pl-9 pr-8 py-2 text-xs focus:outline-none focus:border-ink transition placeholder:text-ink-faint font-medium"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-mute hover:text-ink p-0.5 rounded-full"
-                title="Clear search"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-1 bg-canvas-soft border border-hairline p-1 rounded-xl self-start sm:self-auto overflow-x-auto w-full sm:w-auto">
-            <button
-              onClick={() => setFilterTab("all")}
-              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition text-center whitespace-nowrap ${
-                filterTab === "all"
-                  ? "bg-canvas text-ink shadow-2xs border border-hairline/80"
-                  : "text-ink-mute hover:text-ink"
-              }`}
-            >
-              All ({totalPeopleCount})
-            </button>
-            <button
-              onClick={() => setFilterTab("pending")}
-              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition text-center whitespace-nowrap ${
-                filterTab === "pending"
-                  ? "bg-canvas text-ink shadow-2xs border border-hairline/80"
-                  : "text-ink-mute hover:text-ink"
-              }`}
-            >
-              Pending ({pendingPeopleCount})
-            </button>
-            <button
-              onClick={() => setFilterTab("settled")}
-              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition text-center whitespace-nowrap ${
-                filterTab === "settled"
-                  ? "bg-canvas text-ink shadow-2xs border border-hairline/80"
-                  : "text-ink-mute hover:text-ink"
-              }`}
-            >
-              Settled ({settledPeopleCount})
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Card List (md:hidden) */}
-      <div className="md:hidden space-y-2.5">
-        {filteredPeople.map((person) => {
-          const hasDues = person.pendingPaise > 0;
-          const activeReq = person.activeRequest;
-
-          return (
-            <div
-              key={person.id}
-              className="relative block bg-canvas border border-hairline rounded-xl p-3.5 shadow-2xs active:bg-canvas-soft/80 active:scale-[0.99] hover:border-ink/30 transition-all select-none space-y-2.5"
-            >
-              {/* Full-card tap target with Next.js prefetching */}
-              <Link
-                href={`/dashboard/people/${person.id}`}
-                prefetch={true}
-                className="absolute inset-0 z-0 rounded-xl"
-                aria-label={`View details for ${person.name}`}
+      {/* Table Section */}
+      <div className="bg-[#161616] border border-[#333] rounded-xl overflow-hidden">
+        {/* Table Header Controls */}
+        <div className="p-4 border-b border-[#333] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <h2 className="text-lg font-bold text-white">People</h2>
+          
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="bg-[#1a1a1a] border border-[#333] rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-[#a5d8ce] w-full md:w-64"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
-
-              {/* Top Row: Circular Avatar, Name, Phone & 3-Dot Menu */}
-              <div className="flex items-center justify-between gap-2 relative z-10 pointer-events-none">
-                <div className="flex items-center gap-3 min-w-0">
-                  <UserAvatar name={person.name} size="md" />
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-ink text-sm truncate">
-                      {person.name}
-                    </h3>
-                    <p className="text-xs text-ink-mute flex items-center gap-1 font-mono mt-0.5">
-                      <Phone className="w-3 h-3 text-ink-faint shrink-0" />
-                      <span className="truncate">{person.phone}</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div 
-                  className="flex items-center gap-1 shrink-0 pointer-events-auto" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                >
-                  <PersonActions 
-                    personId={person.id} 
-                    personName={person.name} 
-                    personPhone={person.phone}
-                    activeLinkUrl={activeReq?.link}
-                    activeRefCode={activeReq?.refCode}
-                  />
-                  <ChevronRight className="w-4 h-4 text-ink-faint" />
-                </div>
-              </div>
-
-              {/* Middle Row: Outstanding Balance */}
-              <div className="flex items-center justify-between pt-2 border-t border-hairline relative z-10 pointer-events-none">
-                <span className="text-[11px] text-ink-mute uppercase tracking-wider font-semibold">Balance:</span>
-                {hasDues ? (
-                  <span className="text-sm font-black text-ink">
-                    {formatMoney(person.pendingPaise)}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-mute">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                    Settled
-                  </span>
-                )}
-              </div>
             </div>
-          );
-        })}
-
-        {filteredPeople.length === 0 && (
-          <div className="bg-canvas border border-hairline rounded-xl p-xl text-center space-y-sm">
-            <Users className="w-8 h-8 mx-auto text-ink-faint" />
-            <p className="text-sm font-medium text-ink">
-              {search ? `No people found matching "${search}"` : "No people in this list"}
-            </p>
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="text-xs text-primary font-bold hover:underline"
-              >
-                Clear search query
+            
+            <select 
+              value={filterTab}
+              onChange={(e) => setFilterTab(e.target.value as any)}
+              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-[#a5d8ce] transition-colors"
+            >
+              <option value="all">All People</option>
+              <option value="pending">Pending Dues</option>
+              <option value="settled">Settled</option>
+            </select>
+            <Link href="/dashboard/people/new">
+              <button className="bg-[#a5d8ce] text-black px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-[#8ec2b8] transition-colors">
+                <UserPlus size={14} />
+                <span className="hidden md:inline">Add</span>
               </button>
-            )}
+            </Link>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Desktop Table View (hidden on mobile, visible md and up - No overflow-hidden so dropdowns are not clipped) */}
-      <div className="hidden md:block bg-canvas border border-hairline rounded-xl shadow-2xs">
-        <table className="w-full text-left">
-          <thead className="bg-canvas-soft border-b border-hairline rounded-t-xl">
-            <tr>
-              <th className="px-lg py-md text-ink-mute font-semibold text-[11px] uppercase tracking-wider rounded-tl-xl">Member</th>
-              <th className="px-lg py-md text-ink-mute font-semibold text-[11px] uppercase tracking-wider">Phone</th>
-              <th className="px-lg py-md text-ink-mute font-semibold text-[11px] uppercase tracking-wider">Outstanding Dues</th>
-              <th className="px-lg py-md text-ink-mute font-semibold text-[11px] uppercase tracking-wider text-right rounded-tr-xl">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-hairline">
-            {filteredPeople.map((person) => {
-              const hasDues = person.pendingPaise > 0;
-              const activeReq = person.activeRequest;
-
-              return (
-                <tr
-                  key={person.id}
-                  onClick={() => router.push(`/dashboard/people/${person.id}`)}
-                  className="hover:bg-canvas-soft/60 transition-colors cursor-pointer group relative"
-                >
-                  {/* Member Name + Proper Circular Avatar */}
-                  <td className="px-lg py-md">
-                    <div className="flex items-center gap-3">
-                      <UserAvatar name={person.name} size="md" />
-                      <div className="min-w-0">
-                        <div className="font-bold text-ink text-sm group-hover:text-primary transition-colors">
-                          {person.name}
-                        </div>
-                        {person.email && (
-                          <div className="text-xs text-ink-mute truncate">
-                            {person.email}
-                          </div>
-                        )}
+        {/* Desktop Table */}
+        <div className="w-full overflow-hidden md:overflow-x-auto">
+          <table className="w-full text-left whitespace-nowrap table-fixed md:table-auto">
+            <thead className="bg-[#111111] text-[11px] font-bold text-gray-400 border-b border-[#333]">
+              <tr>
+                <th className="px-3 md:px-4 py-3 md:py-4 w-10 hidden md:table-cell">
+                  <input type="checkbox" className="rounded border-[#333] bg-transparent text-[#a5d8ce] focus:ring-[#a5d8ce] focus:ring-offset-[#161616]" />
+                </th>
+                <th className="px-3 md:px-4 py-3 md:py-4 uppercase tracking-wider w-12 hidden md:table-cell">Avatar</th>
+                <th className="px-3 md:px-4 py-3 md:py-4 uppercase tracking-wider w-1/2 md:w-auto truncate">Group Member</th>
+                <th className="px-3 md:px-4 py-3 md:py-4 uppercase tracking-wider hidden md:table-cell">Email Address</th>
+                <th className="px-3 md:px-4 py-3 md:py-4 uppercase tracking-wider text-right w-1/4 md:w-auto">Balance</th>
+                <th className="px-3 md:px-4 py-3 md:py-4 uppercase tracking-wider hidden sm:table-cell">Status</th>
+                <th className="px-3 md:px-4 py-3 md:py-4 uppercase tracking-wider hidden lg:table-cell">WhatsApp</th>
+                <th className="px-3 md:px-4 py-3 md:py-4 uppercase tracking-wider text-right w-1/4 md:w-auto">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#333] text-sm text-gray-300">
+              {filteredPeople.map((p) => {
+                const owesMoney = p.pendingPaise > 0;
+                
+                return (
+                  <tr 
+                    key={p.id} 
+                    className="hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).closest('button, input, a')) return;
+                      router.push(`/dashboard/people/${p.id}`);
+                    }}
+                  >
+                    <td className="px-3 md:px-4 py-3 md:py-4 hidden md:table-cell">
+                      <input type="checkbox" className="rounded border-[#333] bg-transparent text-[#a5d8ce] focus:ring-[#a5d8ce] focus:ring-offset-[#161616]" />
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4 hidden md:table-cell">
+                      <img src={`https://api.dicebear.com/10.x/glyphs/svg?seed=${encodeURIComponent(p.name)}`} alt="avatar" className="w-8 h-8 rounded-full border border-[#333] bg-[#1a1a1a]" />
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4 text-white font-medium truncate">
+                      <div className="flex items-center gap-2">
+                        <img src={`https://api.dicebear.com/10.x/glyphs/svg?seed=${encodeURIComponent(p.name)}`} alt="avatar" className="w-6 h-6 rounded-full border border-[#333] bg-[#1a1a1a] md:hidden" />
+                        <span className="truncate">{p.name}</span>
                       </div>
-                    </div>
-                  </td>
-
-                  {/* Phone */}
-                  <td className="px-lg py-md">
-                    <span className="font-mono text-xs text-ink">
-                      {person.phone}
-                    </span>
-                  </td>
-
-                  {/* Outstanding Balance */}
-                  <td className="px-lg py-md">
-                    {hasDues ? (
-                      <span className="font-black text-ink text-sm">
-                        {formatMoney(person.pendingPaise)}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-mute">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                        Settled
-                      </span>
-                    )}
-                  </td>
-
-                  {/* Actions Column */}
-                  <td className="px-lg py-md text-right" onClick={(e) => e.stopPropagation()}>
-                    <PersonActions 
-                      personId={person.id} 
-                      personName={person.name} 
-                      personPhone={person.phone}
-                      activeLinkUrl={activeReq?.link}
-                      activeRefCode={activeReq?.refCode}
-                    />
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4 text-gray-500 italic hidden md:table-cell">
+                      {p.email || "Unknown"}
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4 font-bold text-white text-right">
+                      {formatMoney(p.pendingPaise)}
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4 hidden sm:table-cell">
+                      {owesMoney ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border text-orange-400 bg-orange-900/30 border-orange-800">
+                          Owes
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border text-green-400 bg-green-900/30 border-green-800">
+                          Settled
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4 text-gray-400 hidden lg:table-cell">
+                      {p.phone}
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4">
+                      <div className="flex items-center justify-end gap-3 text-gray-500">
+                        <button className="hover:text-white transition-colors" title="View details" onClick={() => router.push(`/dashboard/people/${p.id}`)}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                        <button className="hover:text-red-400 transition-colors" title="Delete person" onClick={(e) => {
+                          e.stopPropagation();
+                          setPersonToDelete({ id: p.id, name: p.name });
+                        }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredPeople.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                    No people found.
                   </td>
                 </tr>
-              );
-            })}
-
-            {filteredPeople.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-lg py-xxl text-center text-ink-mute space-y-sm">
-                  <p className="text-sm font-medium text-ink">
-                    {search ? `No people found matching "${search}"` : "No people in this list"}
-                  </p>
-                  {search && (
-                    <button
-                      onClick={() => setSearch("")}
-                      className="text-xs text-primary font-bold hover:underline"
-                    >
-                      Clear search query
-                    </button>
-                  )}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Delete Confirmation Popup */}
+      {personToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0f0f11]/80 backdrop-blur-sm">
+          <div className="bg-[#161616] border border-[#333] rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <h3 className="text-lg font-bold text-white mb-2">Delete Person?</h3>
+            <p className="text-sm text-gray-400 mb-6">Are you sure you want to delete <span className="font-bold text-white">{personToDelete.name}</span>? This action cannot be undone.</p>
+            <div className="flex items-center gap-3 w-full">
+              <button 
+                onClick={() => setPersonToDelete(null)}
+                className="flex-1 bg-[#1a1a1a] border border-[#333] text-white py-2.5 rounded-xl text-xs font-bold hover:bg-[#222] transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/people/${personToDelete.id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                      router.refresh();
+                    } else {
+                      alert("Failed to delete person");
+                    }
+                  } catch(err) {
+                    alert("Error deleting person");
+                  } finally {
+                    setPersonToDelete(null);
+                  }
+                }}
+                className="flex-1 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500/20 py-2.5 rounded-xl text-xs font-bold transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

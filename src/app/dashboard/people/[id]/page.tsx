@@ -29,12 +29,12 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       <div className="p-md md:p-huge max-w-5xl mx-auto space-y-md">
         <Link 
           href="/dashboard/people" 
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-mute hover:text-ink transition"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to People</span>
         </Link>
-        <div className="bg-canvas border border-hairline rounded-xl p-xl text-center text-ink-mute">
+        <div className="bg-[#161616] border border-[#333] rounded-xl p-xl text-center text-gray-400">
           Person not found.
         </div>
       </div>
@@ -152,7 +152,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       <div>
         <Link 
           href="/dashboard/people" 
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-mute hover:text-ink transition py-2 touch-manipulation"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition py-2 touch-manipulation"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to People</span>
@@ -160,19 +160,19 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* Header Profile Card */}
-      <div className="bg-canvas border border-hairline rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-2xs">
+      <div className="bg-[#161616] border border-[#333] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-3.5 min-w-0">
           <UserAvatar name={person.name} size="lg" />
           <div className="min-w-0">
-            <h1 className="display-md font-black text-ink tracking-tight truncate">{person.name}</h1>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-0.5 text-xs text-ink-mute">
-              <a href={`tel:${person.phone}`} className="flex items-center gap-1 font-mono hover:text-ink transition">
-                <Phone className="w-3 h-3 text-ink-faint shrink-0" />
+            <h1 className="display-md font-black text-white tracking-tight truncate">{person.name}</h1>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-0.5 text-xs text-gray-400">
+              <a href={`tel:${person.phone}`} className="flex items-center gap-1 font-mono hover:text-white transition">
+                <Phone className="w-3 h-3 text-gray-500 shrink-0" />
                 {person.phone}
               </a>
               {person.email && (
-                <a href={`mailto:${person.email}`} className="flex items-center gap-1 truncate hover:text-ink transition">
-                  <Mail className="w-3 h-3 text-ink-faint shrink-0" />
+                <a href={`mailto:${person.email}`} className="flex items-center gap-1 truncate hover:text-white transition">
+                  <Mail className="w-3 h-3 text-gray-500 shrink-0" />
                   {person.email}
                 </a>
               )}
@@ -180,19 +180,19 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
 
-        <div className="sm:text-right shrink-0 border-t border-hairline sm:border-0 pt-3 sm:pt-0 flex items-center justify-between sm:block">
+        <div className="sm:text-right shrink-0 border-t border-[#333] sm:border-0 pt-3 sm:pt-0 flex items-center justify-between sm:block">
           <div>
-            <span className="text-[10px] text-ink-mute uppercase tracking-wider font-semibold block">
+            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold block">
               {totalPendingPaise > 0 ? "Total Dues" : "Status"}
             </span>
-            <p className="text-lg sm:text-2xl font-black text-ink tracking-tight mt-0.5">
+            <p className="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">
               {totalPendingPaise > 0 ? formatMoney(totalPendingPaise) : "Settled"}
             </p>
           </div>
           <Link
             href={`/dashboard/bills/new?personId=${person._id}&returnTo=${encodeURIComponent(`/dashboard/people/${person._id}`)}`}
             aria-label={`Add bill for ${person.name}`}
-            className="sm:hidden inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary text-on-primary shadow-sm transition active:scale-95"
+            className="sm:hidden inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#a5d8ce] text-black shadow-sm transition active:scale-95"
           >
             <Plus className="h-5 w-5" />
           </Link>

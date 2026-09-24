@@ -1,4 +1,4 @@
-export default function PeopleLoading() {
+export default function BillsLoading() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-pulse">
       {/* Header */}
@@ -35,13 +35,12 @@ export default function PeopleLoading() {
             <div key={i} className="flex items-center justify-between py-3 border-b border-[#333] last:border-b-0">
               <div className="flex items-center gap-4">
                 <div className="h-4 w-4 rounded bg-[#333]" />
-                <div className="w-8 h-8 rounded-full bg-[#333]" />
-                <div className="h-5 w-32 rounded bg-[#222]" />
+                <div className="h-5 w-40 rounded bg-[#222]" />
+                <div className="h-5 w-24 rounded bg-[#222] hidden md:block" />
               </div>
-              <div className="h-5 w-40 rounded bg-[#222] hidden md:block" />
+              <div className="h-5 w-20 rounded bg-[#222] hidden md:block" />
               <div className="h-5 w-24 rounded bg-[#222]" />
-              <div className="h-6 w-20 rounded-full bg-[#222]" />
-              <div className="h-5 w-24 rounded bg-[#222] hidden md:block" />
+              <div className="h-6 w-16 rounded-full bg-[#222]" />
               <div className="flex gap-2">
                 <div className="w-8 h-8 rounded bg-[#222]" />
                 <div className="w-8 h-8 rounded bg-[#222]" />
