@@ -40,7 +40,8 @@ async function verifyPayments() {
       };
     });
 
-    const pythonUrl = process.env.PYTHON_VERIFIER_URL || "http://127.0.0.1:8000";
+    const pythonUrl = (process.env.PYTHON_VERIFIER_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+    const verifierSecret = process.env.VERIFIER_SHARED_SECRET;
     let matches: Record<string, any> = {};
     let verifierResponded = false;
 
@@ -48,7 +49,10 @@ async function verifyPayments() {
       const pyRes = await axios.post(`${pythonUrl}/verify-batch`, {
         requests: batchItems,
         used_utrs: Array.from(usedUtrSet)
-      }, { timeout: 4500 });
+      }, {
+        timeout: 4500,
+        headers: verifierSecret ? { "X-Internal-Secret": verifierSecret } : undefined,
+      });
 
       if (pyRes.data && pyRes.data.matches) {
         matches = pyRes.data.matches;

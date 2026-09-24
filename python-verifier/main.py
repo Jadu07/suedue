@@ -4,10 +4,11 @@ import time
 import email
 import asyncio
 import urllib.request
+import hmac
 from email.header import decode_header
 from email.utils import getaddresses
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from dotenv import load_dotenv
@@ -306,11 +307,17 @@ class BatchVerifyRequest(BaseModel):
     requests: List[BatchItem]
     used_utrs: Optional[List[str]] = []
 
+def require_verifier_secret(provided_secret: Optional[str]) -> None:
+    expected_secret = os.getenv("VERIFIER_SHARED_SECRET")
+    if not expected_secret or not provided_secret or not hmac.compare_digest(provided_secret, expected_secret):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
 # ==================== ENDPOINTS (ZERO LATENCY - RAM ONLY) ====================
 
 @app.post("/verify")
-async def verify_payment(req: VerifyRequest):
+async def verify_payment(req: VerifyRequest, x_internal_secret: Optional[str] = Header(default=None)):
     """Sub-millisecond verification directly from memory cache."""
+    require_verifier_secret(x_internal_secret)
     txns = _cached_transactions
     expected_paise = int(round(req.amount))
     used = set(req.used_utrs or [])
@@ -369,11 +376,12 @@ async def verify_payment(req: VerifyRequest):
     }
 
 @app.post("/verify-batch")
-async def verify_batch(req: BatchVerifyRequest):
+async def verify_batch(req: BatchVerifyRequest, x_internal_secret: Optional[str] = Header(default=None)):
     """
     Sub-millisecond batch verification for all pending requests.
     Direct memory lookup - 0ms IMAP wait!
     """
+    require_verifier_secret(x_internal_secret)
     global _last_request_time
     _last_request_time = time.time()
     txns = _cached_transactions
