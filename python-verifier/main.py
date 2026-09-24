@@ -83,15 +83,14 @@ def parse_email_message(msg_bytes: bytes) -> Optional[Dict[str, Any]]:
                 body = payload.decode(errors="ignore")
 
         # Verification uses the parsed receipt body. The subject is never
-        # treated as proof of payment.
+        # treated as proof of payment. Sender-domain validation above is the
+        # provider check; receipt wording varies between Fam email templates.
         full_text = body
-        if "famx" not in full_text.lower() and "fampay" not in full_text.lower():
-            return None
 
         # 1. Extract Amount
-        amt_match = re.search(r"received\s+₹([\d.]+)\s+from", full_text, re.IGNORECASE)
+        amt_match = re.search(r"received\s+₹\s*([\d,]+(?:\.\d+)?)\s+from", full_text, re.IGNORECASE)
         if amt_match:
-            amount_rupees = float(amt_match.group(1))
+            amount_rupees = float(amt_match.group(1).replace(",", ""))
         else:
             return None
 
@@ -106,7 +105,11 @@ def parse_email_message(msg_bytes: bytes) -> Optional[Dict[str, Any]]:
         if name_match:
             sender_name = name_match.group(1).strip()
         else:
-            name_match_alt = re.search(r"(?:from|received from)\s+([a-zA-Z\s]{3,35})", full_text, re.IGNORECASE)
+            name_match_alt = re.search(
+                r"(?:from|received from)\s+([a-zA-Z][a-zA-Z\s]{2,34}?)(?=\s+(?:at|transaction\s+id|date|utr|purpose)\b|$)",
+                full_text,
+                re.IGNORECASE,
+            )
             if name_match_alt:
                 sender_name = name_match_alt.group(1).strip()
 
