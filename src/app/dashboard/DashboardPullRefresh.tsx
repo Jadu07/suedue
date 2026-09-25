@@ -36,18 +36,24 @@ export default function DashboardPullRefresh({ children }: { children: React.Rea
     <div className="relative min-h-full overscroll-y-contain" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
       <div 
         aria-hidden="true" 
-        className="md:hidden pointer-events-none fixed left-1/2 z-[100] -translate-x-1/2 rounded-full border border-[#333] bg-[#161616] shadow-2xl flex items-center justify-center transition-all duration-200" 
+        className="md:hidden pointer-events-none fixed left-0 right-0 z-[100] flex justify-center transition-all duration-200" 
         style={{ 
           top: `calc(env(safe-area-inset-top) + 4rem + ${refreshing ? '1rem' : '-2rem'})`,
-          opacity: refreshing || distance > 10 ? 1 : 0,
-          padding: '8px',
-          transform: `translateX(-50%) ${refreshing ? 'scale(1)' : `scale(${Math.max(0.5, Math.min(1, distance / 64))})`}`
+          opacity: refreshing || distance > 10 ? 1 : 0
         }}
       >
-        <Loader2 
-          className={`h-5 w-5 text-[#a5d8ce] ${refreshing ? "animate-spin" : ""}`} 
-          style={{ transform: refreshing ? 'none' : `rotate(${distance * 3}deg)` }} 
-        />
+        <div 
+          className="rounded-full border border-[#333] bg-[#161616] shadow-2xl flex items-center justify-center"
+          style={{
+            padding: '6px',
+            transform: `${refreshing ? 'scale(1)' : `scale(${Math.max(0.5, Math.min(1, distance / 64))})`}`
+          }}
+        >
+          <Loader2 
+            className={`h-4 w-4 text-[#a5d8ce] ${refreshing ? "animate-spin" : ""}`} 
+            style={{ transform: refreshing ? 'none' : `rotate(${distance * 3}deg)` }} 
+          />
+        </div>
       </div>
       {children}
     </div>
