@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function DashboardPullRefresh({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -34,9 +34,19 @@ export default function DashboardPullRefresh({ children }: { children: React.Rea
 
   return (
     <div className="relative min-h-full overscroll-y-contain" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-      <div aria-hidden="true" className="pointer-events-none fixed left-1/2 top-[calc(env(safe-area-inset-top)+0.5rem)] z-50 -translate-x-1/2 rounded-full border border-hairline bg-canvas px-3 py-1.5 text-[10px] font-bold text-ink-mute shadow-sm transition-opacity" style={{ opacity: refreshing || distance > 0 ? 1 : 0 }}>
-        <RefreshCw className={`mr-1 inline h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />
-        {refreshing ? "Refreshing…" : distance >= 64 ? "Release to refresh" : "Pull to refresh"}
+      <div 
+        aria-hidden="true" 
+        className="pointer-events-none fixed left-1/2 top-[calc(env(safe-area-inset-top)+1rem)] z-50 -translate-x-1/2 rounded-full border border-[#333] bg-[#161616] shadow-xl flex items-center justify-center transition-all duration-200" 
+        style={{ 
+          opacity: refreshing || distance > 10 ? 1 : 0,
+          padding: '8px',
+          transform: `translateX(-50%) ${refreshing ? 'scale(1)' : \`scale(\${Math.max(0.5, Math.min(1, distance / 64))})\`}`
+        }}
+      >
+        <Loader2 
+          className={\`h-5 w-5 text-[#a5d8ce] \${refreshing ? "animate-spin" : ""}\`} 
+          style={{ transform: refreshing ? 'none' : \`rotate(\${distance * 3}deg)\` }} 
+        />
       </div>
       {children}
     </div>
