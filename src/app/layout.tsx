@@ -102,6 +102,17 @@ export default function RootLayout({
               }
               iters++;
             }, 40);
+
+            // Register PWA Service Worker for ultra-fast local caching
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                  console.log('SW registered: ', registration.scope);
+                }).catch(function(err) {
+                  console.log('SW registration failed: ', err);
+                });
+              });
+            }
           })();
         `}} />
         {children}

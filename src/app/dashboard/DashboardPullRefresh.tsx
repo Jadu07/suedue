@@ -36,9 +36,9 @@ export default function DashboardPullRefresh({ children }: { children: React.Rea
     <div className="relative min-h-full overscroll-y-contain" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
       <div 
         aria-hidden="true" 
-        className="pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 rounded-full border border-[#333] bg-[#161616] shadow-xl flex items-center justify-center transition-all duration-200" 
+        className="md:hidden pointer-events-none fixed left-1/2 z-[100] -translate-x-1/2 rounded-full border border-[#333] bg-[#161616] shadow-2xl flex items-center justify-center transition-all duration-200" 
         style={{ 
-          top: `${refreshing ? '2rem' : '-1rem'}`,
+          top: `calc(env(safe-area-inset-top) + 4rem + ${refreshing ? '1rem' : '-2rem'})`,
           opacity: refreshing || distance > 10 ? 1 : 0,
           padding: '8px',
           transform: `translateX(-50%) ${refreshing ? 'scale(1)' : `scale(${Math.max(0.5, Math.min(1, distance / 64))})`}`
