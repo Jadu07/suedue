@@ -40,12 +40,12 @@ export default function DashboardPullRefresh({ children }: { children: React.Rea
         style={{ 
           opacity: refreshing || distance > 10 ? 1 : 0,
           padding: '8px',
-          transform: `translateX(-50%) ${refreshing ? 'scale(1)' : \`scale(\${Math.max(0.5, Math.min(1, distance / 64))})\`}`
+          transform: `translateX(-50%) ${refreshing ? 'scale(1)' : `scale(${Math.max(0.5, Math.min(1, distance / 64))})`}`
         }}
       >
         <Loader2 
-          className={\`h-5 w-5 text-[#a5d8ce] \${refreshing ? "animate-spin" : ""}\`} 
-          style={{ transform: refreshing ? 'none' : \`rotate(\${distance * 3}deg)\` }} 
+          className={`h-5 w-5 text-[#a5d8ce] ${refreshing ? "animate-spin" : ""}`} 
+          style={{ transform: refreshing ? 'none' : `rotate(${distance * 3}deg)` }} 
         />
       </div>
       {children}
