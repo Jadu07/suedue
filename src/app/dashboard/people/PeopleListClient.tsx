@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatMoney } from "@/lib/money";
@@ -44,6 +44,7 @@ export default function PeopleListClient({ initialPeople }: { initialPeople: Per
   const [limit, setLimit] = useState(50);
   const [personToDelete, setPersonToDelete] = useState<{id: string, name: string} | null>(null);
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   // Live filter & search
   const filteredPeople = useMemo(() => {
@@ -230,7 +231,9 @@ export default function PeopleListClient({ initialPeople }: { initialPeople: Per
                     className="hover:bg-[#1a1a1a] transition-colors cursor-pointer"
                     onClick={(e) => {
                       if ((e.target as HTMLElement).closest('button, input, a')) return;
-                      router.push(`/dashboard/people/${p.id}`);
+                      startTransition(() => {
+                        router.push(`/dashboard/people/${p.id}`);
+                      });
                     }}
                   >
                     <td className="px-3 md:px-4 py-3 md:py-4 hidden md:table-cell">
@@ -241,15 +244,27 @@ export default function PeopleListClient({ initialPeople }: { initialPeople: Per
                     </td>
                     <td className="px-3 md:px-4 py-3 md:py-4 text-white font-medium truncate">
                       <div className="flex items-center gap-2">
-                        <img src={`https://api.dicebear.com/10.x/glyphs/svg?seed=${encodeURIComponent(p.name)}`} alt="avatar" className="w-6 h-6 rounded-full border border-[#333] bg-[#1a1a1a] md:hidden" />
-                        <span className="truncate">{p.name}</span>
+                        <img src={`https://api.dicebear.com/10.x/glyphs/svg?seed=${encodeURIComponent(p.name)}`} alt="avatar" className="w-8 h-8 md:w-6 md:h-6 rounded-full border border-[#333] bg-[#1a1a1a] md:hidden" />
+                        <div className="flex flex-col">
+                          <span className="truncate">{p.name}</span>
+                          <span className="text-[10px] text-gray-500 md:hidden">{p.phone}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="px-3 md:px-4 py-3 md:py-4 text-gray-500 italic hidden md:table-cell">
                       {p.email || "Unknown"}
                     </td>
                     <td className="px-3 md:px-4 py-3 md:py-4 font-bold text-white text-right">
-                      {formatMoney(p.pendingPaise)}
+                      <div className="flex flex-col items-end">
+                        <span>{formatMoney(p.pendingPaise)}</span>
+                        <div className="md:hidden mt-0.5">
+                          {owesMoney ? (
+                            <span className="text-[9px] font-bold text-orange-400 uppercase">Owes</span>
+                          ) : (
+                            <span className="text-[9px] font-bold text-green-400 uppercase">Settled</span>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-3 md:px-4 py-3 md:py-4 hidden sm:table-cell">
                       {owesMoney ? (
@@ -267,7 +282,7 @@ export default function PeopleListClient({ initialPeople }: { initialPeople: Per
                     </td>
                     <td className="px-3 md:px-4 py-3 md:py-4">
                       <div className="flex items-center justify-end gap-3 text-gray-500">
-                        <button className="hover:text-white transition-colors" title="View details" onClick={() => router.push(`/dashboard/people/${p.id}`)}>
+                        <button className="hover:text-white transition-colors" title="View details" onClick={() => startTransition(() => router.push(`/dashboard/people/${p.id}`))}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </button>
                         <button className="hover:text-red-400 transition-colors" title="Delete person" onClick={(e) => {

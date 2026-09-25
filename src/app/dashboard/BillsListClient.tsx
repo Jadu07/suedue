@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatMoney } from "@/lib/money";
@@ -13,6 +13,7 @@ export default function BillsListClient({ initialBills }: { initialBills: any[] 
   const [limit, setLimit] = useState(50);
   const [billToDelete, setBillToDelete] = useState<{id: string, title: string} | null>(null);
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const totalBilled = useMemo(() => {
     return initialBills.reduce((acc, b) => acc + (b.totalAmountPaise || 0), 0);
@@ -215,7 +216,9 @@ export default function BillsListClient({ initialBills }: { initialBills: any[] 
                     className="hover:bg-[#1a1a1a] transition-colors cursor-pointer"
                     onClick={(e) => {
                       if ((e.target as HTMLElement).closest('button, input, a')) return;
-                      router.push(`/dashboard/bills/${b._id}`);
+                      startTransition(() => {
+                        router.push(`/dashboard/bills/${b._id}`);
+                      });
                     }}
                   >
                     <td className="px-3 md:px-4 py-3 md:py-4 hidden md:table-cell">
@@ -264,7 +267,7 @@ export default function BillsListClient({ initialBills }: { initialBills: any[] 
                     </td>
                     <td className="px-3 md:px-4 py-3 md:py-4">
                       <div className="flex items-center justify-end gap-3 text-gray-500">
-                        <button className="hover:text-white transition-colors" title="View details" onClick={() => router.push(`/dashboard/bills/${b._id}`)}>
+                        <button className="hover:text-white transition-colors" title="View details" onClick={() => startTransition(() => router.push(`/dashboard/bills/${b._id}`))}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </button>
                         <button 
