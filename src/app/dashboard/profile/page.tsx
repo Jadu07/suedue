@@ -7,11 +7,11 @@ import { User } from "@/models/User";
 export default async function ProfilePage() {
   await dbConnect();
   const admin = await User.findOne({ role: "ADMIN" }).lean();
-  
+
   const adminName = admin?.name || "Admin User";
   const adminEmail = admin?.email || "admin@example.com";
   const avatarUrl = admin?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName)}&background=161616&color=fff`;
-  
+
   const firstName = adminName.split(' ')[0] || "";
   const lastName = adminName.split(' ').slice(1).join(' ') || "";
 
@@ -40,7 +40,7 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <button className="w-10 h-10 rounded-full border border-[#333] flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#222] transition-colors">
             <UserCircle size={18} />
@@ -59,7 +59,7 @@ export default async function ProfilePage() {
         {/* Personal Information */}
         <div className="bg-[#161616] border border-[#333] rounded-xl p-6 relative">
           <h3 className="text-lg font-bold text-white mb-6">Personal Information</h3>
-          
+
           <div className="grid grid-cols-2 gap-y-6">
             <div>
               <div className="text-xs text-gray-500 mb-1">First Name</div>
@@ -87,7 +87,7 @@ export default async function ProfilePage() {
         {/* Address Details Placeholder */}
         <div className="bg-[#161616] border border-[#333] rounded-xl p-6 relative">
           <h3 className="text-lg font-bold text-white mb-6">System Access</h3>
-          
+
           <div className="grid grid-cols-2 gap-y-6">
             <div>
               <div className="text-xs text-gray-500 mb-1">Status</div>

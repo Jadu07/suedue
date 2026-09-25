@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   await dbConnect();
-  
+
   const [admin, yearSetting] = await Promise.all([
     User.findOne({ role: "ADMIN" }).lean(),
     AppSetting.findOne({ key: "includeYearInWhatsApp" }).lean(),
