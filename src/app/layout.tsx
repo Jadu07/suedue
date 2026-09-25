@@ -69,6 +69,13 @@ export default function RootLayout({
               var iters = 0;
               var maxIters = 15;
               
+              // Instantly fill with random characters so there is no black screen delay
+              var initialStr = "";
+              for (var i = 0; i < target.length; i++) {
+                initialStr += chars[Math.floor(Math.random() * chars.length)];
+              }
+              if (textEl) textEl.innerText = initialStr;
+              
               var interval = setInterval(function() {
                 // If React destroyed our element (due to hydration), try to find the new one!
                 if (!document.body.contains(textEl)) {
