@@ -40,8 +40,6 @@ export const metadata: Metadata = {
   },
 };
 
-import SplashScreen from "@/components/SplashScreen";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -50,7 +48,47 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} font-sans antialiased bg-[#0f0f11] text-gray-100`}>
-        <SplashScreen />
+        
+        {/* Instant Vanilla JS Splash Screen */}
+        <div id="global-splash" style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f0f11', transition: 'opacity 0.5s ease-in-out' }}>
+          <h1 id="splash-text" style={{ fontFamily: 'monospace', fontSize: '3rem', fontWeight: 900, letterSpacing: '0.1em', color: '#a5d8ce' }}>      </h1>
+        </div>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            if (sessionStorage.getItem("hasSeenSplash")) {
+              var el = document.getElementById('global-splash');
+              if(el) el.style.display = 'none';
+              return;
+            }
+            var textEl = document.getElementById('splash-text');
+            var splashEl = document.getElementById('global-splash');
+            var target = "suedue";
+            var chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+            var iters = 0;
+            var maxIters = 15;
+            var interval = setInterval(function() {
+              if(!textEl) return;
+              var str = "";
+              for (var i = 0; i < target.length; i++) {
+                if (i < iters / 3) str += target[i];
+                else str += chars[Math.floor(Math.random() * chars.length)];
+              }
+              textEl.innerText = str;
+              if (iters >= maxIters * 3) {
+                clearInterval(interval);
+                setTimeout(function() {
+                  splashEl.style.opacity = '0';
+                  setTimeout(function() {
+                    splashEl.style.display = 'none';
+                    sessionStorage.setItem("hasSeenSplash", "true");
+                  }, 500);
+                }, 600);
+              }
+              iters++;
+            }, 40);
+          })();
+        ` }} />
+
         {children}
       </body>
     </html>
