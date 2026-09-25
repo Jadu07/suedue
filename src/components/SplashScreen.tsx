@@ -56,7 +56,7 @@ export default function SplashScreen() {
   if (!show) return null;
 
   return (
-    <div suppressHydrationWarning className={`fixed inset-0 z-[9999] flex items-center justify-center bg-[#0f0f11] transition-opacity duration-500 ease-in-out ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+    <div id="global-splash" suppressHydrationWarning className={`fixed inset-0 z-[9999] flex items-center justify-center bg-[#0f0f11] transition-opacity duration-500 ease-in-out ${isFading ? 'opacity-0' : 'opacity-100'}`}>
       <div className="flex flex-col items-center justify-center">
         <h1 suppressHydrationWarning className="font-mono text-4xl sm:text-6xl font-black tracking-widest text-[#a5d8ce]">
           {text}

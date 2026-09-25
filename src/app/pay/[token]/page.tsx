@@ -129,6 +129,18 @@ export default async function PublicPaymentPage({ params }: { params: Promise<{ 
 
   return (
     <div className="min-h-screen bg-canvas flex flex-col p-md md:p-huge items-center justify-center">
+      {/* Instantly override global dark mode classes for the /pay route to prevent flicker */}
+      <script dangerouslySetInnerHTML={{
+        __html: `
+          document.documentElement.classList.remove('dark');
+          document.body.classList.remove('bg-[#0f0f11]', 'text-gray-100');
+          document.body.classList.add('bg-canvas', 'text-ink');
+          document.body.style.backgroundColor = '#ffffff';
+          // Also hide the global splash screen if it's showing (since it's dark)
+          var splash = document.getElementById('global-splash');
+          if (splash) splash.style.display = 'none';
+        `
+      }} />
       <LivePaymentUI 
         token={token}
         refCode={refCode}
