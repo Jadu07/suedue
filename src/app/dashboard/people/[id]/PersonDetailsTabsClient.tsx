@@ -25,6 +25,7 @@ export default function PersonDetailsTabsClient({
 }: any) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"pending" | "active_links" | "history" | "profile">("pending");
+  const [selectedPayment, setSelectedPayment] = useState<any>(null);
 
   // Edit Person State
   const [name, setName] = useState(initialPerson.name);
@@ -191,7 +192,14 @@ export default function PersonDetailsTabsClient({
 
   return (
     <div className="space-y-4">
-      
+      {/* Full Screen Loading Overlay for WhatsApp / Link Generation */}
+      {sendingLink && (
+        <div className="fixed inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center space-y-4 animate-in fade-in duration-200">
+          <div className="w-12 h-12 border-4 border-[#1a1a1a] border-t-[#a5d8ce] rounded-full animate-spin"></div>
+          <div className="text-white font-bold tracking-widest text-sm uppercase">Generating link...</div>
+        </div>
+      )}
+
       {/* Newly Generated Link Banner - Sleek, Minimal & Non-duplicate */}
       {generatedLinkInfo && activeTab !== "active_links" && (
         <div className="bg-[#161616] border border-[#a5d8ce]/20 rounded-2xl p-3.5 sm:p-4 shadow-sm animate-in fade-in duration-200">
@@ -266,24 +274,26 @@ export default function PersonDetailsTabsClient({
         </div>
       )}
 
-      {/* MOBILE NAVIGATION: Minimal Horizontal Scrolling Tabs */}
-      <div className="sm:hidden flex items-center overflow-x-auto hide-scrollbar border-b border-[#333] gap-6 pb-px">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap pb-2 text-xs font-bold transition-colors border-b-2 -mb-px ${
-                isActive
-                  ? "border-[#a5d8ce] text-white"
-                  : "border-transparent text-gray-500 hover:text-white"
-              }`}
-            >
-              {tab.shortLabel}
-            </button>
-          );
-        })}
+      {/* MOBILE NAVIGATION: Full-width Distribute Tabs */}
+      <div className="sm:hidden border-b border-[#333] w-full mt-2">
+        <div className="flex items-center justify-between w-full">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 text-center whitespace-nowrap pb-2.5 text-[11px] font-bold transition-all border-b-2 -mb-px ${
+                  isActive
+                    ? "border-[#a5d8ce] text-white"
+                    : "border-transparent text-gray-500 hover:text-white"
+                }`}
+              >
+                {tab.shortLabel}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* DESKTOP NAVIGATION: Horizontal Clean Tabs (No numbers, pure text) */}
@@ -510,7 +520,7 @@ export default function PersonDetailsTabsClient({
                       </div>
 
                       {/* Main Amount & Bill Details */}
-                      <div className="flex items-baseline justify-between gap-4 pt-0.5">
+                      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-3 pt-1">
                         <div>
                           <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Requested Amount</p>
                           <p className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-0.5">
@@ -518,16 +528,16 @@ export default function PersonDetailsTabsClient({
                           </p>
                         </div>
 
-                        <div className="text-right">
+                        <div className="sm:text-right">
                           <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold block">Covers</span>
-                          <p className="text-xs sm:text-sm font-bold text-white truncate max-w-[180px] sm:max-w-xs mt-0.5" title={req.linkedBills || "Consolidated Dues"}>
+                          <p className="text-sm font-bold text-white mt-0.5" title={req.linkedBills || "Consolidated Dues"}>
                             {req.linkedBills || "Consolidated Dues"}
                           </p>
                         </div>
                       </div>
 
                       {/* Bottom Action Bar */}
-                      <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#333]/60 flex-wrap sm:flex-nowrap">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-2 pt-3 border-t border-[#333]/60">
                         <div className="flex items-center gap-2 w-full sm:w-auto flex-1">
                           <button
                             type="button"
@@ -571,9 +581,9 @@ export default function PersonDetailsTabsClient({
                         <button 
                           onClick={() => handleCancelRequest(req.id)}
                           disabled={cancellingId === req.id}
-                          className="text-xs py-1.5 px-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50/50 rounded-lg transition font-medium w-full sm:w-auto text-center sm:text-right"
+                          className="w-full sm:w-auto text-[11px] sm:text-xs py-2 sm:py-1.5 px-3 text-gray-400 hover:text-white bg-[#161616] sm:bg-transparent border border-[#333] sm:border-transparent hover:bg-[#1a1a1a] rounded-xl transition font-medium text-center"
                         >
-                          {cancellingId === req.id ? "Cancelling..." : "Cancel Link"}
+                          {cancellingId === req.id ? "Cancelling..." : "Click here to Cancel"}
                         </button>
                       </div>
                     </div>
@@ -595,34 +605,67 @@ export default function PersonDetailsTabsClient({
               </div>
             ) : (
               <>
-                {/* Single Responsive Table View */}
-                <div className="w-full overflow-hidden">
-                  <table className="w-full text-left whitespace-nowrap table-fixed md:table-auto">
+                {/* Total Paid Header */}
+                <div className="p-4 border-b border-[#333] flex justify-between items-center bg-[#1a1a1a]">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Total Paid</span>
+                  <span className="font-black text-white text-lg">
+                    {formatMoney(paidSplits.reduce((acc: number, s: any) => acc + s.originalPaise, 0))}
+                  </span>
+                </div>
+                {/* Mobile Paid History (Cards) */}
+                <div className="sm:hidden divide-y divide-[#333]">
+                  {paidSplits.map((split: any) => (
+                    <div 
+                      key={split.splitId} 
+                      className="p-4 flex flex-col gap-2 bg-[#161616] cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+                      onClick={() => split.payment && setSelectedPayment(split.payment)}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <span className="font-bold text-white text-sm truncate block">{split.billTitle}</span>
+                          <span className="text-[11px] text-gray-400 mt-1 block">{split.billDate.split("T")[0]}</span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-black text-white text-base tracking-tight">{formatMoney(split.originalPaise)}</p>
+                          <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5 block">Settled</span>
+                        </div>
+                      </div>
+                      {split.payment && (
+                        <div className="pt-2 border-t border-[#333]/50 flex items-center justify-between">
+                          <span className="text-[10px] font-mono text-gray-500">Txn: {split.payment.utr || split.payment.refCode || "N/A"}</span>
+                          <span className="text-[10px] font-medium text-gray-400 capitalize">{split.payment.method}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Paid History (Table) */}
+                <div className="hidden sm:block w-full overflow-hidden">
+                  <table className="w-full text-left whitespace-nowrap">
                     <thead className="bg-[#1a1a1a] border-b border-[#333]">
                       <tr>
-                        <th className="px-4 py-3 text-gray-400 font-semibold text-[11px] uppercase tracking-wider w-1/2 md:w-auto truncate">Bill Title</th>
-                        <th className="px-4 py-3 text-gray-400 font-semibold text-[11px] uppercase tracking-wider hidden md:table-cell">Date</th>
-                        <th className="px-4 py-3 text-gray-400 font-semibold text-[11px] uppercase tracking-wider text-right w-1/4 md:w-auto">Amount</th>
-                        <th className="px-4 py-3 text-gray-400 font-semibold text-[11px] uppercase tracking-wider text-center hidden sm:table-cell">Status</th>
+                        <th className="px-4 py-3 text-gray-400 font-semibold text-[11px] uppercase tracking-wider">Bill Title</th>
+                        <th className="px-4 py-3 text-gray-400 font-semibold text-[11px] uppercase tracking-wider">Transaction</th>
+                        <th className="px-4 py-3 text-gray-400 font-semibold text-[11px] uppercase tracking-wider">Date</th>
+                        <th className="px-4 py-3 text-gray-400 font-semibold text-[11px] uppercase tracking-wider text-right">Amount</th>
+                        <th className="px-4 py-3 text-gray-400 font-semibold text-[11px] uppercase tracking-wider text-center">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-hairline text-gray-300">
                       {paidSplits.map((split: any) => (
-                        <tr key={split.splitId} className="hover:bg-[#1a1a1a]/60 transition-colors">
-                          <td className="px-4 py-3 font-bold text-white text-sm truncate">
-                            <div className="flex flex-col">
-                              <span className="truncate">{split.billTitle}</span>
-                              <span className="text-[10px] text-gray-500 font-normal md:hidden">{split.billDate.split("T")[0]}</span>
-                            </div>
+                        <tr 
+                          key={split.splitId} 
+                          className="hover:bg-[#1a1a1a]/60 transition-colors cursor-pointer"
+                          onClick={() => split.payment && setSelectedPayment(split.payment)}
+                        >
+                          <td className="px-4 py-3 font-bold text-white text-sm truncate">{split.billTitle}</td>
+                          <td className="px-4 py-3 text-[11px] font-mono text-gray-400">
+                            {split.payment ? (split.payment.utr || split.payment.refCode || "N/A") : "—"}
                           </td>
-                          <td className="px-4 py-3 text-xs text-gray-400 hidden md:table-cell">{split.billDate.split("T")[0]}</td>
-                          <td className="px-4 py-3 font-black text-white text-right">
-                            <div className="flex flex-col items-end">
-                              <span>{formatMoney(split.originalPaise)}</span>
-                              <span className="text-[9px] font-bold text-green-400 uppercase sm:hidden mt-0.5">Settled</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-center hidden sm:table-cell">
+                          <td className="px-4 py-3 text-xs text-gray-400">{split.billDate.split("T")[0]}</td>
+                          <td className="px-4 py-3 font-black text-white text-right">{formatMoney(split.originalPaise)}</td>
+                          <td className="px-4 py-3 text-center">
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold text-white bg-[#1a1a1a] border border-[#333]">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                               Settled
@@ -640,63 +683,68 @@ export default function PersonDetailsTabsClient({
 
         {/* PROFILE SETTINGS TAB */}
         {activeTab === "profile" && (
-          <div className="bg-[#161616] border border-[#333] rounded-2xl p-4 sm:p-6 max-w-2xl shadow-xl">
-            <form onSubmit={handleUpdatePerson} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-[#161616] border border-[#333] rounded-2xl p-5 sm:p-6 max-w-2xl shadow-xl">
+            <div className="mb-6">
+              <h3 className="font-bold text-white text-lg">Edit Profile</h3>
+              <p className="text-xs text-gray-400 mt-1">Update contact information and preferences.</p>
+            </div>
+            <form onSubmit={handleUpdatePerson} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-gray-400 text-[11px] uppercase tracking-wider font-semibold mb-1">Name</label>
+                  <label className="block text-gray-400 text-[11px] uppercase tracking-wider font-bold mb-1.5 ml-1">Full Name</label>
                   <input
                     type="text" required
-                    className="w-full bg-[#161616] text-white border border-[#333] rounded-xl px-3 py-2 focus:outline-none focus:border-[#a5d8ce] font-medium text-xs transition"
+                    className="w-full bg-[#1a1a1a] text-white border border-[#333] rounded-xl px-4 py-3.5 focus:outline-none focus:border-[#a5d8ce] focus:ring-1 focus:ring-[#a5d8ce] font-medium text-sm transition shadow-inner"
                     value={name} onChange={(e) => setName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-[11px] uppercase tracking-wider font-semibold mb-1">Phone Number</label>
+                  <label className="block text-gray-400 text-[11px] uppercase tracking-wider font-bold mb-1.5 ml-1">WhatsApp Number</label>
                   <input
                     type="tel" required
-                    className="w-full bg-[#161616] text-white border border-[#333] rounded-xl px-3 py-2 focus:outline-none focus:border-[#a5d8ce] font-medium font-mono text-xs transition"
+                    className="w-full bg-[#1a1a1a] text-white border border-[#333] rounded-xl px-4 py-3.5 focus:outline-none focus:border-[#a5d8ce] focus:ring-1 focus:ring-[#a5d8ce] font-medium font-mono text-sm transition shadow-inner"
                     value={phone} onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
               </div>
               
               <div>
-                <label className="block text-gray-400 text-[11px] uppercase tracking-wider font-semibold mb-1">Email</label>
+                <label className="block text-gray-400 text-[11px] uppercase tracking-wider font-bold mb-1.5 ml-1">Email Address</label>
                 <input
                   type="email"
-                  className="w-full bg-[#161616] text-white border border-[#333] rounded-xl px-3 py-2 focus:outline-none focus:border-[#a5d8ce] font-medium text-xs transition"
+                  className="w-full bg-[#1a1a1a] text-white border border-[#333] rounded-xl px-4 py-3.5 focus:outline-none focus:border-[#a5d8ce] focus:ring-1 focus:ring-[#a5d8ce] font-medium text-sm transition shadow-inner"
                   value={email} onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-gray-400 text-[11px] uppercase tracking-wider font-semibold mb-1">Notes</label>
+                <label className="block text-gray-400 text-[11px] uppercase tracking-wider font-bold mb-1.5 ml-1">Notes / Nickname</label>
                 <textarea
                   rows={3}
-                  className="w-full bg-[#161616] text-white border border-[#333] rounded-xl px-3 py-2 focus:outline-none focus:border-[#a5d8ce] font-medium text-xs transition"
+                  className="w-full bg-[#1a1a1a] text-white border border-[#333] rounded-xl px-4 py-3.5 focus:outline-none focus:border-[#a5d8ce] focus:ring-1 focus:ring-[#a5d8ce] font-medium text-sm transition shadow-inner"
                   value={notes} onChange={(e) => setNotes(e.target.value)}
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center gap-3 pt-2 p-4 bg-[#1a1a1a] rounded-xl border border-[#333]">
                 <input 
                   type="checkbox" 
                   id="isActive"
                   checked={isActive} 
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 text-white rounded accent-[#a5d8ce] cursor-pointer"
+                  className="w-5 h-5 text-white rounded accent-[#a5d8ce] cursor-pointer"
                 />
-                <label htmlFor="isActive" className="text-xs font-semibold text-white cursor-pointer select-none">
-                  Active Member (Receives payment reminders)
+                <label htmlFor="isActive" className="text-sm font-bold text-white cursor-pointer select-none">
+                  Active Member
+                  <span className="block text-xs font-medium text-gray-400 mt-0.5">Can receive WhatsApp reminders and payment requests.</span>
                 </label>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-4 mt-2 border-t border-[#333]">
                 <button 
                   type="submit" 
                   disabled={saving} 
-                  className="bg-[#a5d8ce] text-black hover:bg-[#8ec2b8] transition-colors w-full sm:w-auto text-xs py-2 px-xl shadow-sm"
+                  className="bg-[#a5d8ce] text-black hover:bg-[#8ec2b8] transition-colors w-full sm:w-auto text-sm font-black py-3.5 px-8 rounded-xl shadow-lg active:scale-95 disabled:opacity-50"
                 >
                   {saving ? "Saving Changes..." : "Save Profile"}
                 </button>
@@ -706,6 +754,56 @@ export default function PersonDetailsTabsClient({
         )}
 
       </div>
+
+      {/* Reusable Payment Details Modal */}
+      {selectedPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0f0f11]/80 backdrop-blur-sm">
+          <div className="bg-[#161616] border border-[#333] rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+             <div className="flex items-center justify-between p-5 border-b border-[#333]">
+                <h3 className="text-xs font-black text-white uppercase tracking-widest">Payment Details</h3>
+                <button onClick={() => setSelectedPayment(null)} className="text-gray-400 hover:text-white transition bg-[#1a1a1a] p-1.5 rounded-full border border-[#333]">
+                  <X className="w-4 h-4" />
+                </button>
+             </div>
+             <div className="p-6 space-y-4 text-sm text-gray-400">
+                <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
+                   <span className="font-semibold uppercase tracking-wider text-[10px]">Transaction ID</span>
+                   <span className="font-mono font-bold text-white">{selectedPayment.utr || selectedPayment.refCode || "N/A"}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
+                   <span className="font-semibold uppercase tracking-wider text-[10px]">Amount</span>
+                   <span className="font-black text-[#a5d8ce] text-xl">{formatMoney(selectedPayment.amountPaise)}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
+                   <span className="font-semibold uppercase tracking-wider text-[10px]">Payer (Linked)</span>
+                   <span className="font-bold text-white">{selectedPayment.personId?.name || "Unknown"}</span>
+                </div>
+                {selectedPayment.senderName && (
+                  <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
+                     <span className="font-semibold uppercase tracking-wider text-[10px]">Sender (Bank)</span>
+                     <span className="font-bold text-white">{selectedPayment.senderName}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
+                   <span className="font-semibold uppercase tracking-wider text-[10px]">Bill Title</span>
+                   <span className="font-bold text-white">{selectedPayment.billId?.title || "N/A"}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
+                   <span className="font-semibold uppercase tracking-wider text-[10px]">Payment Method</span>
+                   <span className="font-bold text-white capitalize">{selectedPayment.method}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
+                   <span className="font-semibold uppercase tracking-wider text-[10px]">Status</span>
+                   <span className="font-bold text-emerald-400 uppercase">{selectedPayment.status}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
+                   <span className="font-semibold uppercase tracking-wider text-[10px]">Date & Time</span>
+                   <span className="font-medium text-white">{new Date(selectedPayment.paymentTime || selectedPayment.createdAt).toLocaleString()}</span>
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

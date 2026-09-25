@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -36,41 +36,51 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas flex items-center justify-center px-lg">
-      <div className="bg-canvas-soft border border-hairline rounded-xl p-lg md:p-xxl max-w-[448px] w-full shadow-lg">
-        <h1 className="display-lg text-ink mb-md text-center">Admin Login</h1>
-        <form onSubmit={handleSubmit} className="space-y-md">
-          {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+    <div className="min-h-screen bg-[#0f0f11] flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md bg-[#161616] border border-[#333] rounded-3xl p-6 sm:p-10 shadow-2xl">
+        <div className="text-center mb-8">
+          <h1 className="font-mono text-3xl font-black tracking-widest text-[#a5d8ce] mb-2 lowercase">suedue</h1>
+          <p className="text-gray-400 text-sm">Sign in to your admin dashboard</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="bg-red-950/30 border border-red-900/50 text-red-400 text-sm p-3 rounded-xl text-center font-medium">
+              {error}
+            </div>
+          )}
           
-          <div>
-            <label className="block text-ink-mute body-md mb-xs">Email</label>
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Email</label>
             <input
               type="email"
-              className="w-full bg-canvas text-ink border border-hairline rounded-sm px-md py-sm focus:outline-none focus:border-primary"
+              className="w-full bg-[#1a1a1a] text-white border border-[#333] rounded-xl px-4 py-3 focus:outline-none focus:border-[#a5d8ce] focus:ring-1 focus:ring-[#a5d8ce] transition-all"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@example.com"
               required
             />
           </div>
           
-          <div>
-            <label className="block text-ink-mute body-md mb-xs">Password</label>
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Password</label>
             <input
               type="password"
-              className="w-full bg-canvas text-ink border border-hairline rounded-sm px-md py-sm focus:outline-none focus:border-primary"
+              className="w-full bg-[#1a1a1a] text-white border border-[#333] rounded-xl px-4 py-3 focus:outline-none focus:border-[#a5d8ce] focus:ring-1 focus:ring-[#a5d8ce] transition-all"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
               required
             />
           </div>
           
-          <Button 
+          <button 
             type="submit" 
-            className="w-full btn-primary-dark mt-lg"
+            className="w-full bg-[#a5d8ce] text-black hover:bg-[#8ec2b8] active:scale-[0.98] rounded-xl py-3 text-sm font-bold transition-all flex items-center justify-center mt-2"
             disabled={loading}
           >
-            {loading ? "Logging in..." : "Login"}
-          </Button>
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign In"}
+          </button>
         </form>
       </div>
     </div>

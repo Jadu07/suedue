@@ -53,7 +53,7 @@ export default async function BillViewPage({ params }: { params: Promise<{ id: s
       <div>
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white active:scale-95 transition"
+          className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white active:scale-95 transition"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Back to Bills</span>
@@ -113,26 +113,28 @@ export default async function BillViewPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 self-start">
-            <Link href={`/dashboard/bills/${bill._id}/edit`}>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#161616] hover:bg-[#1a1a1a] border border-[#333] active:scale-95 rounded-xl text-xs font-bold text-white transition shadow-sm">
+          <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-start w-full sm:w-auto mt-2 sm:mt-0">
+            <Link href={`/dashboard/bills/${bill._id}/edit`} className="flex-1 sm:flex-none">
+              <button className="w-full justify-center inline-flex items-center gap-1.5 px-3 py-2 sm:py-1.5 bg-[#161616] hover:bg-[#1a1a1a] border border-[#333] active:scale-95 rounded-xl text-xs font-bold text-white transition shadow-sm">
                 <Pencil className="w-3.5 h-3.5 text-gray-400" />
                 <span>Edit Bill</span>
               </button>
             </Link>
             {!isPaid && (
-              <DeleteBillButton billId={bill._id.toString()} billTitle={bill.title} />
+              <div className="flex-1 sm:flex-none">
+                <DeleteBillButton billId={bill._id.toString()} billTitle={bill.title} />
+              </div>
             )}
           </div>
         </div>
 
         {/* 3-Metric Overview */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-5 pt-4 border-t border-[#333]/80">
-          <div className="bg-[#1a1a1a]/70 border border-[#333] p-3 sm:p-4 rounded-xl flex flex-col justify-between">
-            <span className="text-[10px] sm:text-[11px] text-gray-400 uppercase tracking-wider font-bold block truncate">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mt-5 pt-4 border-t border-[#333]/80">
+          <div className="col-span-2 sm:col-span-1 bg-[#1a1a1a]/70 border border-[#333] p-4 rounded-xl flex sm:flex-col justify-between items-center sm:items-start">
+            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-bold block truncate">
               Total Amount
             </span>
-            <p className="text-base sm:text-2xl font-black text-white mt-1 truncate">
+            <p className="text-xl sm:text-2xl font-black text-white mt-0 sm:mt-1 truncate">
               {formatMoney(totalAmountPaise)}
             </p>
           </div>

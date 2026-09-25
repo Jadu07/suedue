@@ -181,7 +181,7 @@ export default function NewBillPage() {
       <div>
         <Link 
           href="/dashboard" 
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition py-2 touch-manipulation"
+          className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition py-2 touch-manipulation"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Bills</span>

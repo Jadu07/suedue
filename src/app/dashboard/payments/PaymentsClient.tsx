@@ -301,16 +301,22 @@ export default function PaymentsClient({ initialPayments }: { initialPayments: a
              <div className="p-6 space-y-4 text-sm text-gray-400">
                 <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
                    <span className="font-semibold uppercase tracking-wider text-[10px]">Transaction ID</span>
-                   <span className="font-mono font-bold text-white bg-[#1a1a1a] px-2 py-1 rounded border border-[#333]">{selectedPayment.utr || selectedPayment.refCode || "N/A"}</span>
+                   <span className="font-mono font-bold text-white">{selectedPayment.utr || selectedPayment.refCode || "N/A"}</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
                    <span className="font-semibold uppercase tracking-wider text-[10px]">Amount</span>
                    <span className="font-black text-[#a5d8ce] text-xl">{formatMoney(selectedPayment.amountPaise)}</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
-                   <span className="font-semibold uppercase tracking-wider text-[10px]">Payer</span>
-                   <span className="font-bold text-white">{selectedPayment.personId?.name || selectedPayment.senderName || "Unknown"}</span>
+                   <span className="font-semibold uppercase tracking-wider text-[10px]">Payer (Linked)</span>
+                   <span className="font-bold text-white">{selectedPayment.personId?.name || "Unknown"}</span>
                 </div>
+                {selectedPayment.senderName && (
+                  <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
+                     <span className="font-semibold uppercase tracking-wider text-[10px]">Sender (Bank)</span>
+                     <span className="font-bold text-white">{selectedPayment.senderName}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
                    <span className="font-semibold uppercase tracking-wider text-[10px]">Bill Title</span>
                    <span className="font-bold text-white">{selectedPayment.billId?.title || "N/A"}</span>
@@ -321,7 +327,7 @@ export default function PaymentsClient({ initialPayments }: { initialPayments: a
                 </div>
                 <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
                    <span className="font-semibold uppercase tracking-wider text-[10px]">Status</span>
-                   <span className="font-bold text-white capitalize bg-[#1a1a1a] px-2 py-0.5 rounded border border-[#333]">{selectedPayment.status}</span>
+                   <span className="font-bold text-emerald-400 uppercase">{selectedPayment.status}</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-[#333]/50 pb-3">
                    <span className="font-semibold uppercase tracking-wider text-[10px]">Date & Time</span>

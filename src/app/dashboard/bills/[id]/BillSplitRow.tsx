@@ -105,14 +105,14 @@ export default function BillSplitRow({
         </div>
       </div>
       
-      <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+      <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto w-full sm:w-auto pt-2 sm:pt-0 border-t border-[#333]/40 sm:border-0 mt-1 sm:mt-0">
         {!isFullySettled ? (
           <>
             <button
               type="button"
               onClick={handleSendWhatsApp}
               disabled={waLoading}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#333] bg-[#161616] hover:bg-[#1a1a1a] active:scale-95 text-xs font-bold text-white transition shadow-sm"
+              className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-xl border border-[#333] bg-[#161616] hover:bg-[#1a1a1a] active:scale-95 text-xs font-bold text-white transition shadow-sm"
             >
               <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
               <span>{waLoading ? "Sending..." : "Remind"}</span>
@@ -120,14 +120,14 @@ export default function BillSplitRow({
             <button
               type="button"
               onClick={() => setShowPaymentModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#a5d8ce] text-black hover:bg-[#8ec2b8] active:scale-95 text-xs font-bold transition shadow-sm"
+              className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl bg-[#a5d8ce] text-black hover:bg-[#8ec2b8] active:scale-95 text-xs font-bold transition shadow-sm"
             >
               <Check className="w-3.5 h-3.5" />
               <span>Mark Paid</span>
             </button>
           </>
         ) : (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#1a1a1a] text-white border border-[#333]">
+          <span className="w-full sm:w-auto justify-center inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-2 sm:py-1 rounded-xl sm:rounded-full bg-[#1a1a1a] text-white border border-[#333]">
             <CheckCircle2 className={`w-3 h-3 ${isDeduction ? "text-amber-600" : "text-emerald-500"}`} />
             <span>{isDeduction ? "Credit / Deducted" : "Settled"}</span>
           </span>

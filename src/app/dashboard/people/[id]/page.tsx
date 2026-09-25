@@ -61,15 +61,29 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
   const pendingSplitsData = [];
   const paidSplitsData = [];
 
-  // Group splits by status and calculate exact amounts in RAM
   for (const split of allSplits) {
     if (split.status === "PAID") {
+      const splitPayments = allVerifiedPayments.filter(p => p.splitId?.toString() === split._id.toString());
+      const primaryPayment = splitPayments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+      
       paidSplitsData.push({
         splitId: split._id.toString(),
         billTitle: split.billId ? split.billId.title : "Bill",
         billDate: split.billId ? split.billId.date.toISOString() : split.createdAt.toISOString(),
         originalPaise: split.originalAmountPaise,
-        remainingPaise: 0
+        remainingPaise: 0,
+        payment: primaryPayment ? {
+          _id: primaryPayment._id.toString(),
+          utr: primaryPayment.utr,
+          refCode: primaryPayment.refCode,
+          amountPaise: primaryPayment.amountPaise,
+          method: primaryPayment.method,
+          status: primaryPayment.status,
+          senderName: primaryPayment.senderName,
+          paymentTime: primaryPayment.paymentTime?.toISOString() || primaryPayment.createdAt?.toISOString(),
+          personId: { name: person.name },
+          billId: { title: split.billId ? split.billId.title : "Bill" }
+        } : null
       });
     } else {
       const totalPaid = splitPaidMap.get(split._id.toString()) || 0;
@@ -152,7 +166,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       <div>
         <Link 
           href="/dashboard/people" 
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition py-2 touch-manipulation"
+          className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition py-2 touch-manipulation"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to People</span>

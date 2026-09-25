@@ -40,6 +40,8 @@ export const metadata: Metadata = {
   },
 };
 
+import SplashScreen from "@/components/SplashScreen";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -48,6 +50,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} font-sans antialiased bg-[#0f0f11] text-gray-100`}>
+        <SplashScreen />
         {children}
       </body>
     </html>

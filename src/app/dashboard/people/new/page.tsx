@@ -51,7 +51,7 @@ export default function NewPersonPage() {
         </div>
         <Link 
           href="/dashboard/people" 
-          className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors bg-[#1a1a1a] border border-[#333] px-4 py-2 rounded-lg"
+          className="hidden sm:inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors bg-[#1a1a1a] border border-[#333] px-4 py-2 rounded-lg"
         >
           <ArrowLeft size={16} />
           Back to People

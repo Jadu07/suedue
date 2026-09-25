@@ -20,9 +20,10 @@ export default async function PeoplePage() {
     Split.find({ status: { $ne: "CANCELLED" } })
       .select("_id personId status originalAmountPaise")
       .lean(),
-    PaymentTransaction.find({ status: "VERIFIED" })
-      .select("splitId amountPaise")
-      .lean(),
+    PaymentTransaction.aggregate([
+      { $match: { status: "VERIFIED", splitId: { $exists: true, $ne: null } } },
+      { $group: { _id: "$splitId", amountPaise: { $sum: "$amountPaise" } } }
+    ]),
     PaymentRequest.find({
       status: "ACTIVE",
       expiresAt: { $gt: new Date() }
@@ -34,12 +35,11 @@ export default async function PeoplePage() {
 
   const appUrl = process.env.APP_URL || "http://127.0.0.1:3000";
 
-  // Pre-calculate verified payments per splitId
+  // Pre-calculate verified payments per splitId from aggregated result
   const splitPaidMap = new Map<string, number>();
   for (const p of verifiedPayments) {
-    if (p.splitId) {
-      const sId = p.splitId.toString();
-      splitPaidMap.set(sId, (splitPaidMap.get(sId) || 0) + (p.amountPaise || 0));
+    if (p._id) {
+      splitPaidMap.set(p._id.toString(), p.amountPaise || 0);
     }
   }
 
